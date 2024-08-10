@@ -1,11 +1,11 @@
 package main
 
 import (
-	"math/rand"
-	"time"
 	"Truco_Server/cardpack"
 	"fmt"
+	"math/rand"
 	"net"
+	"time"
 )
 
 
@@ -27,7 +27,9 @@ func main(){
 		if err != nil{
 			fmt.Println("Error accepting Client")
 		}
+
 		fmt.Println(connection)
+		connection.Write([]byte("Hello, World"))
 	}
 
 }
