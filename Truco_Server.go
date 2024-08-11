@@ -2,12 +2,12 @@ package main
 
 import (
 	"Truco_Server/cardpack"
+	"bytes"
 	"fmt"
 	"math/rand"
 	"net"
 	"time"
 )
-
 
 type Client struct{
 	Name string
@@ -24,12 +24,15 @@ func main(){
 
 	for {
 		connection, err := Server.Accept()
+		go ListenToMe(connection)
+		
 		if err != nil{
 			fmt.Println("Error accepting Client")
 		}
-
+		
 		fmt.Println(connection)
-		connection.Write([]byte("Hello, World"))
+		message := []byte("Hello, World")
+		connection.Write(message)
 	}
 
 }
@@ -46,4 +49,12 @@ func ShuffleHands(){
 	}
 
 	fmt.Println(Hands)
+}
+
+func ListenToMe(connection net.Conn){
+	mybuff := make([]byte, 1024)
+	for {
+		connection.Read(mybuff)
+		fmt.Println(string(mybuff[:]))
+	}
 }
