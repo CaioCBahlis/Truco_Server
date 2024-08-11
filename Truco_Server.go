@@ -2,7 +2,6 @@ package main
 
 import (
 	"Truco_Server/cardpack"
-	"bytes"
 	"fmt"
 	"math/rand"
 	"net"
