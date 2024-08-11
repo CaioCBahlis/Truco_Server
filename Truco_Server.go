@@ -23,11 +23,11 @@ func main(){
 
 	for {
 		connection, err := Server.Accept()
-		go ListenToMe(connection)
-		
 		if err != nil{
 			fmt.Println("Error accepting Client")
+			return
 		}
+		go ListenToMe(connection)
 		
 		fmt.Println(connection)
 		message := []byte("Hello, World")
