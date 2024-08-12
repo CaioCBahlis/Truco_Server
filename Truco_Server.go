@@ -73,7 +73,7 @@ func ShuffleHands() []cardpack.Card{
 	rand.Shuffle(len(cardpack.Cards), func(i, j int)  {cardpack.Cards[i], cardpack.Cards[j] = cardpack.Cards[j], cardpack.Cards[i]})
 
 	for i := 0; i < 8; i++{
-		Hands = append(Hands, cardpack.Card{Name: cardpack.Cards[i], Value: cardpack.Values[cardpack.Cards[i]]})
+		Hands = append(Hands, cardpack.Card{Name: cardpack.Cards[i], Value: cardpack.Values[cardpack.Cards[i]], Repr: cardpack.CreateTerminalRepr(cardpack.Cards[i])})
 	}
 
 	return Hands
@@ -89,7 +89,8 @@ func ListenToMe(connection net.Conn){
 
 func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
-	S.Clients[0].IpAddress.Write([]byte(Card[0].Name + "\n"))
-	S.Clients[0].IpAddress.Write([]byte(Card[1].Name + "\n"))
-	S.Clients[0].IpAddress.Write([]byte(Card[2].Name + "\n"))
+	for i := range(8){
+		ImageLine:=  Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
+		S.Clients[0].IpAddress.Write([]byte(ImageLine))
+	}
 }
