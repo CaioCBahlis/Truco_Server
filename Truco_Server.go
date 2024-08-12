@@ -1,9 +1,7 @@
 package main
 
 import (
-	"Truco_Server/Truco_Server/cardpack"
 	"Truco_Server/cardpack"
-	"bytes"
 	"fmt"
 	"math/rand"
 	"net"
@@ -49,7 +47,7 @@ func main(){
 			
 		}
 		*/
-		connection.Write(byte("Starting Match..."))
+		connection.Write([]byte("Starting Match..."))
 		MyServer.Start_Game()
 	}
 
