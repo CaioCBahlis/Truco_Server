@@ -35,19 +35,31 @@ func main(){
 		MyServer.Clients = append(MyServer.Clients, Client{connection})
 		go ListenToMe(connection)
 		
+		/*
 		fmt.Println(connection)
 		message := []byte("Hello, World")
 		connection.Write(message)
-		/*
+		
 		if len(MyServer.Clients) {
 			Waiting_Message, _:= "Waiting For Players... %d/4", len(MyServer.Clients)
 			connection.Write([]byte(Waiting_Message))
 		}else{
 			connection.Write([]byte("Starting Match...."))
-			
 		}
 		*/
+
 		connection.Write([]byte("Starting Match..."))
+		time.Sleep(1 * time.Second)
+
+		connection.Write([]byte("3"))
+		time.Sleep(1 * time.Second)
+
+		connection.Write([]byte("2"))
+		time.Sleep(1 * time.Second)
+
+		connection.Write([]byte("1"))
+		time.Sleep(1 * time.Second)
+
 		MyServer.Start_Game()
 	}
 
@@ -70,12 +82,14 @@ func ShuffleHands() []cardpack.Card{
 func ListenToMe(connection net.Conn){
 	mybuff := make([]byte, 1024)
 	for {
-		connection.Read(mybuff)
-		fmt.Println(string(mybuff[:]))
+		n, _ := connection.Read(mybuff)
+		if n > 0{fmt.Println(string(mybuff[:]))}
 	}
 }
 
 func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
-	S.Clients[0].IpAddress.Write([]byte(Card[0].Name))
+	S.Clients[0].IpAddress.Write([]byte(Card[0].Name + "\n"))
+	S.Clients[0].IpAddress.Write([]byte(Card[1].Name + "\n"))
+	S.Clients[0].IpAddress.Write([]byte(Card[2].Name + "\n"))
 }
