@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -94,18 +95,37 @@ func ListenToMe(connection net.Conn){
 }
 
 func (S *ServerStruct) Start_Game(){
-	//Card := ShuffleHands()
-	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
-	S.Clients[1].IpAddress.Write([]byte("--------------------------------------------"))
+	Card := ShuffleHands()
 
 
-	
 	FPUi := cardpack.TripleUI
 	SPUi := cardpack.TripleUI
 	
 
-	//FPUi[3] = Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
-	//SPUi[3] =  Card[3].Repr[i] + Card[4].Repr[i] + Card[5].Repr[i] 
+	FPUi[3] = strings.Replace(FPUi[3], "X", string(Card[0].Name[0]), 1)
+	FPUi[3] = strings.Replace(FPUi[3], "Y", string(Card[1].Name[0]), 1)
+	FPUi[3] = strings.Replace(FPUi[3], "Z", string(Card[2].Name[0]), 1)
+
+	FPUi[5] = strings.Replace(FPUi[5], "X", string(Card[0].Name[1]), 1)
+	FPUi[5] = strings.Replace(FPUi[5], "Y", string(Card[1].Name[1]), 1)
+	FPUi[5] = strings.Replace(FPUi[5], "Z", string(Card[2].Name[1]), 1)
+
+	FPUi[7] = strings.Replace(FPUi[7], "X", string(Card[0].Name[0]), 1)
+	FPUi[7] = strings.Replace(FPUi[7], "Y", string(Card[1].Name[0]), 1)
+	FPUi[7] = strings.Replace(FPUi[7], "Z", string(Card[2].Name[0]), 1)
+
+	SPUi[3] = strings.Replace(SPUi[3], "X", string(Card[3].Name[0]), 1)
+	SPUi[3] = strings.Replace(SPUi[3], "X", string(Card[4].Name[0]), 1)
+	SPUi[3] = strings.Replace(SPUi[3], "X", string(Card[5].Name[0]), 1)
+
+	SPUi[5] = strings.Replace(SPUi[5], "X", string(Card[3].Name[1]), 1)
+	SPUi[5] = strings.Replace(SPUi[5], "Y", string(Card[4].Name[1]), 1)
+	SPUi[5] = strings.Replace(SPUi[5], "Z", string(Card[5].Name[1]), 1)
+
+	SPUi[7] = strings.Replace(SPUi[7], "X", string(Card[3].Name[0]), 1)
+	SPUi[7] = strings.Replace(SPUi[7], "Y", string(Card[4].Name[0]), 1)
+	SPUi[7] = strings.Replace(SPUi[7], "Z", string(Card[5].Name[0]), 1)
+
 
 	for i := range(17){
 	
