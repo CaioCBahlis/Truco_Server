@@ -20,6 +20,7 @@ type Client struct{
 
 func main(){
 	MyServer := ServerStruct{Port: ":8080", Clients: []Client{}}
+	fmt.Println("Server is Running")
 	Server, err := net.Listen("tcp", MyServer.Port)
 	if err != nil{
 		fmt.Println("Error Openning the server")
@@ -35,35 +36,40 @@ func main(){
 		MyServer.Clients = append(MyServer.Clients, Client{connection})
 		go ListenToMe(connection)
 		
-		/*
-		fmt.Println(connection)
-		message := []byte("Hello, World")
-		connection.Write(message)
 		
-		if len(MyServer.Clients) {
-			Waiting_Message, _:= "Waiting For Players... %d/4", len(MyServer.Clients)
+		if len(MyServer.Clients) != 2{
+			Waiting_Message, _:= "Waiting For Players... %d/2", len(MyServer.Clients)
 			connection.Write([]byte(Waiting_Message))
+			time.Sleep(1 * time.Second)
 		}else{
-			connection.Write([]byte("Starting Match...."))
+			break
 		}
-		*/
+	}
 
-		connection.Write([]byte("Starting Match..."))
+		
+		MyServer.Clients[0].IpAddress.Write([]byte("Starting Match...."))
+		MyServer.Clients[1].IpAddress.Write([]byte("Starting Match...."))
 		time.Sleep(1 * time.Second)
 
-		connection.Write([]byte("3"))
+		
+	
+		MyServer.Clients[0].IpAddress.Write([]byte("3"))
+		MyServer.Clients[1].IpAddress.Write([]byte("3"))
 		time.Sleep(1 * time.Second)
 
-		connection.Write([]byte("2"))
+		MyServer.Clients[0].IpAddress.Write([]byte("2"))
+		MyServer.Clients[1].IpAddress.Write([]byte("2"))
 		time.Sleep(1 * time.Second)
 
-		connection.Write([]byte("1"))
+		MyServer.Clients[0].IpAddress.Write([]byte("1"))
+		MyServer.Clients[1].IpAddress.Write([]byte("1"))
 		time.Sleep(1 * time.Second)
 
 		MyServer.Start_Game()
-	}
-
+	
 }
+
+
 
 
 func ShuffleHands() []cardpack.Card{
@@ -90,9 +96,15 @@ func ListenToMe(connection net.Conn){
 func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
 	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
+	S.Clients[1].IpAddress.Write([]byte("--------------------------------------------"))
+
 	for i := range(7){
 		ImageLine:=  Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
 		S.Clients[0].IpAddress.Write([]byte(ImageLine + "\n"))
+		Image2Line := Card[3].Repr[i] + Card[4].Repr[i] + Card[5].Repr[i]
+		S.Clients[0].IpAddress.Write([]byte(Image2Line + "\n"))
 	}
 	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
+	S.Clients[1].IpAddress.Write([]byte("--------------------------------------------"))
+
 }
