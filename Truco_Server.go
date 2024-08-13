@@ -89,8 +89,10 @@ func ListenToMe(connection net.Conn){
 
 func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
-	for i := range(8){
+	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
+	for i := range(7){
 		ImageLine:=  Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
 		S.Clients[0].IpAddress.Write([]byte(ImageLine))
 	}
+	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
 }

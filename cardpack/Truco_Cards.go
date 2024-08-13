@@ -44,9 +44,12 @@ var Cards = []string{
 
 
 func CreateTerminalRepr(Card string) []string{
-    NewCard := CardRepr
-    NewCard[1] = NewCard[1][0:3] + string(Card[0]) + NewCard[1][4:]
-    NewCard[3] = NewCard[3][0:3] + string(Card[1]) + NewCard[3][4:]
-    NewCard[5] = NewCard[5][0:3] + string(Card[0]) + NewCard[5][4:]
+    NewCard := make([]string, len(CardRepr))
+    copy(NewCard, CardRepr)
+
+
+    NewCard[1] = NewCard[1][0:4] + string(Card[0]) + NewCard[1][5:]
+    NewCard[3] = NewCard[2][0:4] + string([]rune(Card)[1]) + NewCard[2][5:]
+    NewCard[5] = NewCard[5][0:4] + string(Card[0]) + NewCard[5][5:]
     return NewCard
 }
