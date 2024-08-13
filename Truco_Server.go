@@ -94,17 +94,23 @@ func ListenToMe(connection net.Conn){
 }
 
 func (S *ServerStruct) Start_Game(){
-	Card := ShuffleHands()
+	//Card := ShuffleHands()
 	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
 	S.Clients[1].IpAddress.Write([]byte("--------------------------------------------"))
 
-	for i := range(7){
-		ImageLine:=  Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
-		S.Clients[0].IpAddress.Write([]byte(ImageLine + "\n"))
-		Image2Line := Card[3].Repr[i] + Card[4].Repr[i] + Card[5].Repr[i]
-		S.Clients[1].IpAddress.Write([]byte(Image2Line + "\n"))
+
+	
+	FPUi := cardpack.TripleUI
+	SPUi := cardpack.TripleUI
+	
+
+	//FPUi[3] = Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
+	//SPUi[3] =  Card[3].Repr[i] + Card[4].Repr[i] + Card[5].Repr[i] 
+
+	for i := range(17){
+	
+		S.Clients[0].IpAddress.Write([]byte(FPUi[i] + "\n"))
+		S.Clients[1].IpAddress.Write([]byte(SPUi[i] + "\n"))
 	}
-	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
-	S.Clients[1].IpAddress.Write([]byte("--------------------------------------------"))
 
 }
