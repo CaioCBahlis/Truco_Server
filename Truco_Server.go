@@ -102,7 +102,7 @@ func (S *ServerStruct) Start_Game(){
 		ImageLine:=  Card[0].Repr[i] + Card[1].Repr[i] + Card[2].Repr[i]
 		S.Clients[0].IpAddress.Write([]byte(ImageLine + "\n"))
 		Image2Line := Card[3].Repr[i] + Card[4].Repr[i] + Card[5].Repr[i]
-		S.Clients[0].IpAddress.Write([]byte(Image2Line + "\n"))
+		S.Clients[1].IpAddress.Write([]byte(Image2Line + "\n"))
 	}
 	S.Clients[0].IpAddress.Write([]byte("--------------------------------------------"))
 	S.Clients[1].IpAddress.Write([]byte("--------------------------------------------"))
