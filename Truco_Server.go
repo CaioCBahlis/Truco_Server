@@ -40,11 +40,9 @@ func main(){
 		}
 
 		connection.Write([]byte("What would you like to be called"))		
-		NameBuff := []byte{}
-		n, _ := connection.Read(NameBuff)
-		for n == 0{
-			n, _ = connection.Read(NameBuff)
-		}
+		NameBuff := make([]byte, 1024)
+		connection.Read(NameBuff)
+		
 
 		ConnClient :=  Client{Name: string(NameBuff[:]) ,IpAddress:  connection}
 		MyServer.Clients = append(MyServer.Clients, ConnClient)
@@ -54,7 +52,6 @@ func main(){
 		if len(MyServer.Clients) != 2{
 			Waiting_Message := "Waiting For Players... + 1/2" 
 			connection.Write([]byte(Waiting_Message))
-			time.Sleep(1 * time.Second)
 		}else{
 			break
 		}
