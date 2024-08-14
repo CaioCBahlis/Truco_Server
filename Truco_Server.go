@@ -7,6 +7,7 @@ import (
 	"net"
 	"strings"
 	"time"
+	"strconv"
 )
 
 type ServerStruct struct{
@@ -20,6 +21,11 @@ type Client struct{
 	IpAddress net.Conn
 	CurHand []cardpack.Card
 	IsTurn bool
+}
+
+type Game struct{
+	CardsOnTable []cardpack.Card
+	Round int
 }
 
 
@@ -99,9 +105,37 @@ func ShuffleHands() []cardpack.Card{
 func (S *ServerStruct) ListenToMe(MyClient Client){
 	mybuff := make([]byte, 1024)
 	for {
-		if !S.OnGame || MyClient.IsTurn{
+		if !S.OnGame{
 			n, _ := MyClient.IpAddress.Read(mybuff)
 			if n > 0{fmt.Println(string(mybuff[:]))}
+		}else if MyClient.IsTurn{
+			n, _ := MyClient.IpAddress.Read(mybuff)
+			if n > 0{
+				switch string(mybuff[:]){
+				case "Jogar":
+					Index := make([]byte, 1024)
+					MyClient.IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+					MyClient.IpAddress.Read(Index)
+					Num, _ := strconv.Atoi(string(Index[:]))
+					for Num > len(MyClient.CurHand) || Num < 1{
+						MyClient.IpAddress.Write([]byte("Invalid Index"))
+						MyClient.IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+						MyClient.IpAddress.Read(Index)
+						Num, _ = strconv.Atoi(string(Index[:]))
+					}
+					fmt.Println(MyClient.CurHand[Num].Name)
+				case "Truco":
+					fmt.Println("Received")
+				case "Envido":
+					fmt.Println("Received")
+				case "Queimar":
+					fmt.Println("Received")
+				case "Correr":
+					fmt.Println("Received")
+				case "Flor":
+					fmt.Println("Received")
+				}
+			}
 		}
 	}
 }
@@ -152,7 +186,5 @@ func (S *ServerStruct) Start_Game(){
 		S.Clients[1].IpAddress.Write([]byte(SPUi[i] + "\n"))
 	}
 	S.Clients[0].IsTurn = true
-
-
-
+	select{}
 }
