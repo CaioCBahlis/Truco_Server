@@ -9,7 +9,7 @@ import (
 )
 
 
-var ServerIP  string = "52.67.111.171:8080"
+var ServerIP  string = "54.232.156.147:8080"
 var MyServer Server
 
 type Server struct{

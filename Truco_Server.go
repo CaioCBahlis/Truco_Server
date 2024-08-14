@@ -12,10 +12,14 @@ import (
 type ServerStruct struct{
 	Port string
 	Clients []Client
+	OnGame bool
 }
 
 type Client struct{
+	Name string
 	IpAddress net.Conn
+	CurHand []cardpack.Card
+	IsTurn bool
 }
 
 
@@ -34,12 +38,21 @@ func main(){
 			fmt.Println("Error accepting Client")
 			return
 		}
-		MyServer.Clients = append(MyServer.Clients, Client{connection})
-		go ListenToMe(connection)
+
+		connection.Write([]byte("What would you like to be called"))		
+		NameBuff := []byte{}
+		n, _ := connection.Read(NameBuff)
+		for n == 0{
+			n, _ = connection.Read(NameBuff)
+		}
+
+		ConnClient :=  Client{Name: string(NameBuff[:]) ,IpAddress:  connection}
+		MyServer.Clients = append(MyServer.Clients, ConnClient)
+		go MyServer.ListenToMe(ConnClient)
 		
 		
 		if len(MyServer.Clients) != 2{
-			Waiting_Message, _:= "Waiting For Players... %d/2", len(MyServer.Clients)
+			Waiting_Message := "Waiting For Players... " + string(len(MyServer.Clients)) + "/2" 
 			connection.Write([]byte(Waiting_Message))
 			time.Sleep(1 * time.Second)
 		}else{
@@ -86,11 +99,13 @@ func ShuffleHands() []cardpack.Card{
 	return Hands
 }
 
-func ListenToMe(connection net.Conn){
-	mybuff := make([]byte, 1024)
-	for {
-		n, _ := connection.Read(mybuff)
-		if n > 0{fmt.Println(string(mybuff[:]))}
+func (S *ServerStruct) ListenToMe(MyClient Client){
+	if !S.OnGame || MyClient.IsTurn{
+		mybuff := make([]byte, 1024)
+		for {
+			n, _ := MyClient.IpAddress.Read(mybuff)
+			if n > 0{fmt.Println(string(mybuff[:]))}
+		}
 	}
 }
 
@@ -102,6 +117,12 @@ func (S *ServerStruct) Start_Game(){
     SPUi := make([]string, len(cardpack.TripleUI))
     copy(FPUi, cardpack.TripleUI)
     copy(SPUi, cardpack.TripleUI)
+
+	CardNum := 0
+	for _, MyClient := range S.Clients{
+		MyClient.CurHand = append(MyClient.CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
+		CardNum += 2
+	}
 
 	FPUi[3] = strings.Replace(FPUi[3], "X", string(Card[0].Name[0]), 1)
 	FPUi[3] = strings.Replace(FPUi[3], "Y", string(Card[1].Name[0]), 1)
@@ -133,5 +154,8 @@ func (S *ServerStruct) Start_Game(){
 		S.Clients[0].IpAddress.Write([]byte(FPUi[i] + "\n"))
 		S.Clients[1].IpAddress.Write([]byte(SPUi[i] + "\n"))
 	}
+	S.Clients[0].IsTurn = true
+
+
 
 }
