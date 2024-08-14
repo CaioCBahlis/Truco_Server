@@ -167,7 +167,8 @@ func (S *ServerStruct) Start_Game(){
 	}
 
 	var Gui []string
-	for _, Client := range S.Clients{
+	for idx, _ := range S.Clients{
+		Client := S.Clients[idx]
 		Gui = cardpack.UpdateGui(S.Round, Client.CurHand)
 		for i := range(18){
 			Client.IpAddress.Write([]byte(Gui[i] + "\n"))
@@ -180,7 +181,7 @@ func (S *ServerStruct) Start_Game(){
 			Client.IsTurn = true
 			for !Client.Played{
 				fmt.Println("Waiting for Player...")
-				time.Sleep(1 * time.Second)
+				time.Sleep(2 * time.Second)
 			}
 		}
 		fmt.Println(S.CardsOnTable)
