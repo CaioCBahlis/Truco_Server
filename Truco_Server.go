@@ -105,39 +105,39 @@ func ShuffleHands() []cardpack.Card{
 }
 
 func (S *ServerStruct) ListenToMe(PlayerIndex int){
-	MyClient := S.Clients[PlayerIndex]
+	
 	mybuff := make([]byte, 1024)
 	for {
+		n, _ := S.Clients[PlayerIndex].IpAddress.Read(mybuff)
+		Message := string(mybuff[:])
 		if !S.OnGame{
-			n, _ := MyClient.IpAddress.Read(mybuff)
-			if n > 0{fmt.Println(string(mybuff[:]))}
-		}else if MyClient.IsTurn{
-			n, _ := MyClient.IpAddress.Read(mybuff)
-			Command := string(mybuff[:])
+			if n > 0{fmt.Println(Message)}
+		}else if S.Clients[PlayerIndex].IsTurn{
+			fmt.Println(Message)
 			if n > 0{
-				switch Command{
-				case "Jogar":
-					Index := make([]byte, 1024)
-					MyClient.IpAddress.Write([]byte("Enter the index of your card (1-3)"))
-					MyClient.IpAddress.Read(Index)
-					Num, _ := strconv.Atoi(string(Index[:]))
-					for Num > len(MyClient.CurHand) || Num < 1{
-						MyClient.IpAddress.Write([]byte("Invalid Index"))
-						MyClient.IpAddress.Write([]byte("Enter the index of your card (1-3)"))
-						MyClient.IpAddress.Read(Index)
-						Num, _ = strconv.Atoi(string(Index[:]))
-					}
-					fmt.Println(MyClient.CurHand[Num].Name)
-				case "Truco":
-					fmt.Println("Received")
-				case "Envido":
-					fmt.Println("Received")
-				case "Queimar":
-					fmt.Println("Received")
-				case "Correr":
-					fmt.Println("Received")
-				case "Flor":
-					fmt.Println("Received")
+				switch Message{
+					case "Jogar":
+						Index := make([]byte, 1024)
+						S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+						S.Clients[PlayerIndex].IpAddress.Read(Index)
+						Num, _ := strconv.Atoi(string(Index[:]))
+						for Num > len(S.Clients[PlayerIndex].CurHand) || Num < 1{
+							S.Clients[PlayerIndex].IpAddress.Write([]byte("Invalid Index"))
+							S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+							S.Clients[PlayerIndex].IpAddress.Read(Index)
+							Num, _ = strconv.Atoi(string(Index[:]))
+						}
+						fmt.Println(S.Clients[PlayerIndex].CurHand[Num].Name)
+					case "Truco":
+						fmt.Println("Received")
+					case "Envido":
+						fmt.Println("Received")
+					case "Queimar":
+						fmt.Println("Received")
+					case "Correr":
+						fmt.Println("Received")
+					case "Flor":
+						fmt.Println("Received")
 				}
 			}
 		}
