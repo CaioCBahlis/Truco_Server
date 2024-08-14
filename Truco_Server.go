@@ -14,13 +14,17 @@ type ServerStruct struct{
 	Port string
 	Clients []Client
 	OnGame bool
+	Round int
+	CardsOnTable []cardpack.Card
 }
 
 type Client struct{
 	Name string
 	IpAddress net.Conn
 	CurHand []cardpack.Card
+	PlayerIndex int
 	IsTurn bool
+	Played bool
 }
 
 type Game struct{
@@ -51,13 +55,13 @@ func main(){
 		connection.Read(NameBuff)
 		
 
-		ConnClient :=  Client{Name: string(NameBuff[:]) ,IpAddress:  connection}
+		ConnClient :=  Client{Name: string(NameBuff[:]) ,IpAddress:  connection, PlayerIndex: PlayerIndex}
 		MyServer.Clients = append(MyServer.Clients, ConnClient)
 		go MyServer.ListenToMe(PlayerIndex)
 		PlayerIndex += 1		
 		
 		if len(MyServer.Clients) != 2{
-			Waiting_Message := "Waiting For Players... + 1/2" 
+			Waiting_Message := "Waiting For Players... 1/2 Players Ready" 
 			connection.Write([]byte(Waiting_Message))
 		}else{
 			break
@@ -84,6 +88,7 @@ func main(){
 		time.Sleep(1 * time.Second)
 
 		MyServer.OnGame = true
+		MyServer.Round = 1
 		MyServer.Start_Game()
 	
 }
@@ -120,15 +125,22 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 					case "Jogar":
 						Index := make([]byte, 1024)
 						S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
-						S.Clients[PlayerIndex].IpAddress.Read(Index)
-						Num, _ := strconv.Atoi(string(Index[:]))
-						for Num > len(S.Clients[PlayerIndex].CurHand) || Num < 1{
+						sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
+						Num, _ := strconv.Atoi(string(Index[:sz]))
+						CardIndex := Num -1
+
+						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("Invalid Index"))
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
 							S.Clients[PlayerIndex].IpAddress.Read(Index)
 							Num, _ = strconv.Atoi(string(Index[:]))
 						}
-						fmt.Println(S.Clients[PlayerIndex].CurHand[Num].Name)
+						
+						PlayedCard := S.Clients[PlayerIndex].CurHand[CardIndex]
+						S.Clients[PlayerIndex].CurHand = append(S.Clients[PlayerIndex].CurHand[:CardIndex], S.Clients[PlayerIndex].CurHand[CardIndex+1:]...)
+						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+
+						fmt.Println(S.Clients[PlayerIndex].CurHand[Num-1].Name)
 					case "Truco":
 						fmt.Println("Received")
 					case "Envido":
@@ -148,48 +160,35 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
 
-
-	FPUi := make([]string, len(cardpack.TripleUI))
-    SPUi := make([]string, len(cardpack.TripleUI))
-    copy(FPUi, cardpack.TripleUI)
-    copy(SPUi, cardpack.TripleUI)
-
 	CardNum := 0
 	for _, MyClient := range S.Clients{
 		MyClient.CurHand = append(MyClient.CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
-		CardNum += 2
+		CardNum += 3
 	}
 
-	FPUi[3] = strings.Replace(FPUi[3], "X", string(Card[0].Name[0]), 1)
-	FPUi[3] = strings.Replace(FPUi[3], "Y", string(Card[1].Name[0]), 1)
-	FPUi[3] = strings.Replace(FPUi[3], "Z", string(Card[2].Name[0]), 1)
-
-	FPUi[5] = strings.Replace(FPUi[5], "X", string([]rune(Card[0].Name)[1]), 1)
-	FPUi[5] = strings.Replace(FPUi[5], "Y", string([]rune(Card[1].Name)[1]), 1)
-	FPUi[5] = strings.Replace(FPUi[5], "Z", string([]rune(Card[2].Name)[1]), 1)
-
-	FPUi[7] = strings.Replace(FPUi[7], "X", string(Card[0].Name[0]), 1)
-	FPUi[7] = strings.Replace(FPUi[7], "Y", string(Card[1].Name[0]), 1)
-	FPUi[7] = strings.Replace(FPUi[7], "Z", string(Card[2].Name[0]), 1)
-
-	SPUi[3] = strings.Replace(SPUi[3], "X", string(Card[3].Name[0]), 1)
-	SPUi[3] = strings.Replace(SPUi[3], "Y", string(Card[4].Name[0]), 1)
-	SPUi[3] = strings.Replace(SPUi[3], "Z", string(Card[5].Name[0]), 1)
-
-	SPUi[5] = strings.Replace(SPUi[5], "X", string([]rune(Card[3].Name)[1]), 1)
-	SPUi[5] = strings.Replace(SPUi[5], "Y", string([]rune(Card[4].Name)[1]), 1)
-	SPUi[5] = strings.Replace(SPUi[5], "Z", string([]rune(Card[5].Name)[1]), 1)
-
-	SPUi[7] = strings.Replace(SPUi[7], "X", string(Card[3].Name[0]), 1)
-	SPUi[7] = strings.Replace(SPUi[7], "Y", string(Card[4].Name[0]), 1)
-	SPUi[7] = strings.Replace(SPUi[7], "Z", string(Card[5].Name[0]), 1)
-
-
-	for i := range(18){
-	
-		S.Clients[0].IpAddress.Write([]byte(FPUi[i] + "\n"))
-		S.Clients[1].IpAddress.Write([]byte(SPUi[i] + "\n"))
+	var Gui []string
+	for _, Client := range S.Clients{
+		Gui = cardpack.UpdateGui(S.Round, Client.CurHand)
+		for i := range(18){
+			Client.IpAddress.Write([]byte(Gui[i] + "\n"))
+		}
 	}
-	S.Clients[0].IsTurn = true
+
+	for S.Round < 3 || S.OnGame{
+		for idx, _ := range(S.Clients){
+			Client := S.Clients[idx]
+			Client.IsTurn = true
+			for !Client.Played{
+				fmt.Println("Waiting for Player...")
+				time.Sleep(1 * time.Second)
+			}
+		}
+		fmt.Println(S.CardsOnTable)
+		S.Round += 1
+		S.CardsOnTable = make([]cardpack.Card, 4)
+
+	}
+
+
 	select{}
 }

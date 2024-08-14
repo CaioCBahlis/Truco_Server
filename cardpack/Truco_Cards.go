@@ -1,6 +1,8 @@
 package cardpack
 
-
+import (
+    "strings"
+)
 
 
 type Card struct{
@@ -119,4 +121,25 @@ var SingleUI = []string{
     "|   +------------------+ +------------------+ +------------------+   |",
     "'--------------------------------------------------------------------'",
 
+}
+
+func UpdateGui(Round int, CurHand []Card) []string{
+    NewUi := make([]string, len(TripleUI))
+    switch Round{
+    case 1:
+        copy(NewUi, TripleUI)
+    case 2:
+        copy(NewUi, DoubleUI)
+    case 3:
+        copy(NewUi, SingleUI)
+    }
+
+    for _, Card := range(CurHand){
+        NewUi[3] = strings.Replace(NewUi[3], "X", string(Card.Name[0]), 1)
+        NewUi[5] = strings.Replace(NewUi[5], "X", string([]rune(Card.Name)[1]), 1)
+        NewUi[7] = strings.Replace(NewUi[7], "X", string(Card.Name[0]), 1)
+    }
+
+
+    return NewUi
 }
