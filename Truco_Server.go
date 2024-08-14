@@ -38,6 +38,7 @@ func main(){
 		return
 	}
 
+	PlayerIndex := 0
 	for {
 		connection, err := Server.Accept()
 		if err != nil{
@@ -52,8 +53,8 @@ func main(){
 
 		ConnClient :=  Client{Name: string(NameBuff[:]) ,IpAddress:  connection}
 		MyServer.Clients = append(MyServer.Clients, ConnClient)
-		go MyServer.ListenToMe(ConnClient)
-		
+		go MyServer.ListenToMe(PlayerIndex)
+		PlayerIndex += 1		
 		
 		if len(MyServer.Clients) != 2{
 			Waiting_Message := "Waiting For Players... + 1/2" 
@@ -82,6 +83,7 @@ func main(){
 		MyServer.Clients[1].IpAddress.Write([]byte("1"))
 		time.Sleep(1 * time.Second)
 
+		MyServer.OnGame = true
 		MyServer.Start_Game()
 	
 }
@@ -102,7 +104,8 @@ func ShuffleHands() []cardpack.Card{
 	return Hands
 }
 
-func (S *ServerStruct) ListenToMe(MyClient Client){
+func (S *ServerStruct) ListenToMe(PlayerIndex int){
+	MyClient := S.Clients[PlayerIndex]
 	mybuff := make([]byte, 1024)
 	for {
 		if !S.OnGame{
@@ -110,8 +113,9 @@ func (S *ServerStruct) ListenToMe(MyClient Client){
 			if n > 0{fmt.Println(string(mybuff[:]))}
 		}else if MyClient.IsTurn{
 			n, _ := MyClient.IpAddress.Read(mybuff)
+			Command := string(mybuff[:])
 			if n > 0{
-				switch string(mybuff[:]){
+				switch Command{
 				case "Jogar":
 					Index := make([]byte, 1024)
 					MyClient.IpAddress.Write([]byte("Enter the index of your card (1-3)"))
