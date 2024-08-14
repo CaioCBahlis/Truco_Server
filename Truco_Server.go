@@ -109,7 +109,8 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 	mybuff := make([]byte, 1024)
 	for {
 		n, _ := S.Clients[PlayerIndex].IpAddress.Read(mybuff)
-		Message := string(mybuff[:])
+		Message := strings.TrimSpace(string(mybuff[:]))
+
 		if !S.OnGame{
 			if n > 0{fmt.Println(Message)}
 		}else if S.Clients[PlayerIndex].IsTurn{
