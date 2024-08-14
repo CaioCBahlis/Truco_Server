@@ -52,7 +52,7 @@ func main(){
 		
 		
 		if len(MyServer.Clients) != 2{
-			Waiting_Message := "Waiting For Players... " + string(len(MyServer.Clients)) + "/2" 
+			Waiting_Message := "Waiting For Players... + 1/2" 
 			connection.Write([]byte(Waiting_Message))
 			time.Sleep(1 * time.Second)
 		}else{
@@ -100,9 +100,9 @@ func ShuffleHands() []cardpack.Card{
 }
 
 func (S *ServerStruct) ListenToMe(MyClient Client){
-	if !S.OnGame || MyClient.IsTurn{
-		mybuff := make([]byte, 1024)
-		for {
+	mybuff := make([]byte, 1024)
+	for {
+		if !S.OnGame || MyClient.IsTurn{
 			n, _ := MyClient.IpAddress.Read(mybuff)
 			if n > 0{fmt.Println(string(mybuff[:]))}
 		}
