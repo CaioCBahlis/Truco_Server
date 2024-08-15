@@ -174,7 +174,7 @@ func (S *ServerStruct) Start_Game(){
 
 
 	var Gui []string
-	for S.Round < 3 || S.Clients[0].RoundsWon == 2 || S.Clients[1].RoundsWon == 2 {
+	for S.Round < 3 || S.Clients[0].RoundsWon != 2 || S.Clients[1].RoundsWon != 2 {
 
 
 		for idx := range(len(S.Clients)){
@@ -187,23 +187,26 @@ func (S *ServerStruct) Start_Game(){
 		
 		for idx := range(len(S.Clients)){
 			S.Clients[idx].IsTurn = true
-			for ! S.Clients[idx].Played{
+			S.Clients[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
+			for !S.Clients[idx].Played{
 				fmt.Println("\n" + "Waiting for" +  S.Clients[idx].Name + "...")
 				time.Sleep(5 * time.Second)
 			}
+			S.Clients[idx].Played = false
+			S.Clients[idx].IsTurn = false
 		}
 
 		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 			S.Clients[0].RoundsWon += 1
-			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[0].Name + "Won the Round"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[0].Name + "Won the Round"))
+			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name)  + "Won the Round"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name) + "Won the Round"))
 		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 			S.Clients[1].RoundsWon += 1
-			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[1].Name + "Won the Round"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[1].Name + "Won the Round"))
+			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[1].Name)  + "Won the Round"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[1].Name) + "Won the Round"))
 		}else{
-			S.Clients[0].IpAddress.Write([]byte("\n" +"Draw"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +"Draw"))
+			S.Clients[0].IpAddress.Write([]byte("\n" + "Draw"))
+			S.Clients[1].IpAddress.Write([]byte("\n" + "Draw"))
 		}
 		
 		S.Round += 1
