@@ -110,6 +110,13 @@ func ShuffleHands() []cardpack.Card{
 	return Hands
 }
 
+func (S *ServerStruct) BroadCast(message string){
+	for _, Client := range(S.Clients){
+		Client.IpAddress.Write([]byte("\n" + message))
+	}
+}
+
+
 func (S *ServerStruct) ListenToMe(PlayerIndex int){
 	
 	mybuff := make([]byte, 1024)
@@ -140,7 +147,6 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						}
 						
 						PlayedCard := S.Clients[PlayerIndex].CurHand[CardIndex]
-						fmt.Println(PlayedCard)
 						S.Clients[PlayerIndex].CurHand = append(S.Clients[PlayerIndex].CurHand[:CardIndex], S.Clients[PlayerIndex].CurHand[CardIndex+1:]...)
 						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 						S.Clients[PlayerIndex].Played = true
@@ -195,22 +201,28 @@ func (S *ServerStruct) Start_Game(){
 				fmt.Println("\n" + "Waiting for" +  S.Clients[idx].Name + "...")
 				time.Sleep(5 * time.Second)
 			}
+
+			S.BroadCast(S.Clients[idx].Name + "Played: ")
+			Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
+			for i := range(6){
+				S.BroadCast(Card[i])
+			}
+
 			S.Clients[idx].Played = false
 			S.Clients[idx].IsTurn = false
 		}
 		
-		fmt.Println("Size of name ",  len(strings.TrimSpace(S.Clients[0].Name)))
+
 		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 			S.Clients[0].RoundsWon += 1
-			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[0].Name  + "Won the Round"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[0].Name + "Won the Round"))
+			S.BroadCast(S.Clients[0].Name  + "Won the Round")
+
 		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 			S.Clients[1].RoundsWon += 1
-			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[1].Name  + "Won the Round"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[1].Name + "Won the Round"))
+			S.BroadCast(S.Clients[1].Name + "Won the Round")
+
 		}else{
-			S.Clients[0].IpAddress.Write([]byte("\n" + "Draw"))
-			S.Clients[1].IpAddress.Write([]byte("\n" + "Draw"))
+			S.BroadCast("Draw")
 		}
 		
 		S.Round += 1
