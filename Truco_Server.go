@@ -182,6 +182,7 @@ func (S *ServerStruct) Start_Game(){
 		for idx := range(len(S.Clients)){
 			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
 			S.Clients[idx].IpAddress.Write([]byte("\n"))
+			
 			for i := range(18){
 				S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
 			}
@@ -200,7 +201,7 @@ func (S *ServerStruct) Start_Game(){
 		
 		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 			S.Clients[0].RoundsWon += 1
-			fmt.Sprintf("Size of name ",  len(strings.TrimSpace(S.Clients[0].Name)))
+			fmt.Println("Size of name ",  len(strings.TrimSpace(S.Clients[0].Name)))
 			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name)  + "Won the Round"))
 			S.Clients[1].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name) + "Won the Round"))
 		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{

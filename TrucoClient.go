@@ -50,7 +50,6 @@ func (S *Server) ListenToServer(){
 func (S *Server) WriteToServer(){
 	reader := bufio.NewReader(os.Stdin)
 	for{
-		fmt.Print("Enter Message: ")
 		message, _ := reader.ReadString('\n')
 		S.Server_Conn.Write([]byte(message))
 	}
