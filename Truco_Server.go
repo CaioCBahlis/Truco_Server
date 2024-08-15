@@ -204,7 +204,7 @@ func (S *ServerStruct) Start_Game(){
 
 			S.BroadCast(S.Clients[idx].Name + "Played: ")
 			Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
-			for i := range(6){
+			for i := range(7){
 				S.BroadCast(Card[i])
 			}
 
