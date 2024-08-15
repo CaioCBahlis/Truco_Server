@@ -25,6 +25,7 @@ type Client struct{
 	PlayerIndex int
 	IsTurn bool
 	Played bool
+	RoundsWon int
 }
 
 type Game struct{
@@ -50,7 +51,7 @@ func main(){
 			return
 		}
 
-		connection.Write([]byte("What would you like to be called"))		
+		connection.Write([]byte("\n" +"What would you like to be called"))		
 		NameBuff := make([]byte, 1024)
 		connection.Read(NameBuff)
 		
@@ -62,15 +63,15 @@ func main(){
 		
 		if len(MyServer.Clients) != 2{
 			Waiting_Message := "Waiting For Players... 1/2 Players Ready" 
-			connection.Write([]byte(Waiting_Message))
+			connection.Write([]byte("\n" + Waiting_Message))
 		}else{
 			break
 		}
 	}
 
 		
-		MyServer.Clients[0].IpAddress.Write([]byte("Starting Match...."))
-		MyServer.Clients[1].IpAddress.Write([]byte("Starting Match...."))
+		MyServer.Clients[0].IpAddress.Write([]byte("\n" +"Starting Match...."))
+		MyServer.Clients[1].IpAddress.Write([]byte("\n" +"Starting Match...."))
 		time.Sleep(1 * time.Second)
 
 		
@@ -124,15 +125,15 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 				switch Message{
 					case "Jogar":
 						Index := make([]byte, 1024)
-						S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+						S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
 
 						sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
 						Num, _ := strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
 						CardIndex := Num -1
 
 						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
-							S.Clients[PlayerIndex].IpAddress.Write([]byte("Invalid Index"))
-							S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Invalid Index"))
+							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
 							S.Clients[PlayerIndex].IpAddress.Read(Index)
 							Num, _ = strconv.Atoi(string(Index[:]))
 							CardIndex = Num -1
@@ -164,7 +165,7 @@ func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
 
 	CardNum := 0
-	for idx, _ := range S.Clients{
+	for idx := range(len(S.Clients)){
 		S.Clients[idx].CurHand = append(S.Clients[idx].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
 		CardNum += 3
 	}
@@ -173,28 +174,49 @@ func (S *ServerStruct) Start_Game(){
 
 
 	var Gui []string
-	for S.Round < 3 || S.OnGame{
+	for S.Round < 3 || S.Clients[0].RoundsWon == 2 || S.Clients[1].RoundsWon == 2 {
 
-		fmt.Println("Round " + string(S.Round))
-		for idx, _ := range S.Clients{
+
+		for idx := range(len(S.Clients)){
 			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
+			S.Clients[idx].IpAddress.Write([]byte("\n"))
 			for i := range(18){
 				S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
 			}
 		}
-
-		for idx, _ := range(S.Clients){
+		
+		for idx := range(len(S.Clients)){
 			S.Clients[idx].IsTurn = true
 			for ! S.Clients[idx].Played{
-				fmt.Println("Waiting for" +  S.Clients[idx].Name + "...")
+				fmt.Println("\n" + "Waiting for" +  S.Clients[idx].Name + "...")
 				time.Sleep(5 * time.Second)
 			}
 		}
-		fmt.Println(S.CardsOnTable)
+
+		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
+			S.Clients[0].RoundsWon += 1
+			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[0].Name + "Won the Round"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[0].Name + "Won the Round"))
+		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
+			S.Clients[1].RoundsWon += 1
+			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[1].Name + "Won the Round"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[1].Name + "Won the Round"))
+		}else{
+			S.Clients[0].IpAddress.Write([]byte("\n" +"Draw"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +"Draw"))
+		}
+		
 		S.Round += 1
 		S.CardsOnTable = make([]cardpack.Card, 4)
 	}
 
+	if S.Clients[0].RoundsWon > S.Clients[1].RoundsWon{
+		fmt.Println("Player 1 Won")
+	}else if S.Clients[0].RoundsWon < S.Clients[1].RoundsWon{
+		fmt.Println("Player 2 Won")
+	}else{
+		fmt.Println("Draw")
+	}
 
-	select{}
+
 }
