@@ -139,11 +139,11 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						}
 						
 						PlayedCard := S.Clients[PlayerIndex].CurHand[CardIndex]
+						fmt.Println(PlayedCard)
 						S.Clients[PlayerIndex].CurHand = append(S.Clients[PlayerIndex].CurHand[:CardIndex], S.Clients[PlayerIndex].CurHand[CardIndex+1:]...)
 						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 						S.Clients[PlayerIndex].Played = true
-						fmt.Println(S.Clients[PlayerIndex].CurHand[CardIndex].Name)
-
+						
 					case "Truco":
 						fmt.Println("Received")
 					case "Envido":
@@ -169,15 +169,20 @@ func (S *ServerStruct) Start_Game(){
 		CardNum += 3
 	}
 
-	var Gui []string
-	for idx, _ := range S.Clients{
-		Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
-		for i := range(18){
-			S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
-		}
-	}
+	
 
+
+	var Gui []string
 	for S.Round < 3 || S.OnGame{
+
+		fmt.Println("Round " + string(S.Round))
+		for idx, _ := range S.Clients{
+			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
+			for i := range(18){
+				S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
+			}
+		}
+
 		for idx, _ := range(S.Clients){
 			S.Clients[idx].IsTurn = true
 			for ! S.Clients[idx].Played{
@@ -188,12 +193,6 @@ func (S *ServerStruct) Start_Game(){
 		fmt.Println(S.CardsOnTable)
 		S.Round += 1
 		S.CardsOnTable = make([]cardpack.Card, 4)
-		for idx, _ := range S.Clients{
-			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
-			for i := range(18){
-				S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
-			}
-		}
 	}
 
 
