@@ -139,6 +139,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
 						Num, _ := strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
 						CardIndex := Num -1
+						fmt.Println(CardIndex)
 
 						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Invalid Index"))
@@ -228,6 +229,8 @@ func (S *ServerStruct) Start_Game(){
 			
 				
 			}else{
+				S.PlayingOrder[0].RoundsWon += 1
+				S.PlayingOrder[1].RoundsWon += 1
 				S.BroadCast("Draw")
 			}
 			S.Round += 1
