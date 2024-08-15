@@ -139,7 +139,6 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
 						Num, _ := strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
 						CardIndex := Num -1
-						fmt.Println(CardIndex)
 
 						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Invalid Index"))
@@ -202,7 +201,8 @@ func (S *ServerStruct) Start_Game(){
 				S.PlayingOrder[idx].IsTurn = true
 				S.Clients[S.PlayingOrder[idx].PlayerIndex].IsTurn = true
 				S.PlayingOrder[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
-				for !S.PlayingOrder[idx].Played{
+
+				for !S.Clients[S.PlayingOrder[idx].PlayerIndex].Played {
 					fmt.Println("\n" + "Waiting for" +  S.PlayingOrder[idx].Name + "...")
 					time.Sleep(5 * time.Second)
 				}
