@@ -143,8 +143,8 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Invalid Index"))
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
-							S.Clients[PlayerIndex].IpAddress.Read(Index)
-							Num, _ = strconv.Atoi(string(Index[:]))
+							sz, _ = S.Clients[PlayerIndex].IpAddress.Read(Index)
+							Num, _ = strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
 							CardIndex = Num -1
 						}
 						
@@ -199,6 +199,7 @@ func (S *ServerStruct) Start_Game(){
 			
 			for idx := range(len(S.PlayingOrder)){
 				S.PlayingOrder[idx].IsTurn = true
+				S.Clients[S.PlayingOrder[idx].PlayerIndex].IsTurn = true
 				S.PlayingOrder[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 				for !S.PlayingOrder[idx].Played{
 					fmt.Println("\n" + "Waiting for" +  S.PlayingOrder[idx].Name + "...")
@@ -223,7 +224,7 @@ func (S *ServerStruct) Start_Game(){
 			}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 				S.PlayingOrder[1].RoundsWon += 1
 				S.BroadCast(S.PlayingOrder[1].Name + "Won the Round")
-				S.PlayingOrder = []Client{S.Clients[1], S.Clients[[0]]}
+				S.PlayingOrder = []Client{S.Clients[1], S.Clients[0]}
 			
 				
 			}else{
@@ -242,7 +243,7 @@ func (S *ServerStruct) Start_Game(){
 	}else{
 		fmt.Println("Draw")
 	}
-	S.BroadCast(fmt.Sprintf(S.PlayingOrder[0].Name, S.PlayingOrder[0].Points))
-	S.BroadCast(fmt.Sprintf(S.PlayingOrder[1].Name, S.PlayingOrder[1].Points))
+	S.BroadCast(fmt.Sprintf("%s: %d", S.PlayingOrder[0].Name, S.PlayingOrder[0].Points))
+	S.BroadCast(fmt.Sprintf("%s: %d", S.PlayingOrder[1].Name, S.PlayingOrder[1].Points))
 	}
 }
