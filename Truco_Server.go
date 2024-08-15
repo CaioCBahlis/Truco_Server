@@ -190,7 +190,7 @@ func (S *ServerStruct) Start_Game(){
 			S.CardsOnTable  = []cardpack.Card{}
 			for idx := range(len(S.PlayingOrder)){
 				Gui = cardpack.UpdateGui(S.Round,  S.PlayingOrder[idx].CurHand)
-				S.Clients[idx].IpAddress.Write([]byte("\n"))
+				S.PlayingOrder[idx].IpAddress.Write([]byte("\n"))
 
 				for i := range(18){
 					S.PlayingOrder[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
@@ -198,7 +198,7 @@ func (S *ServerStruct) Start_Game(){
 			}
 			
 			for idx := range(len(S.PlayingOrder)){
-				S.PlayingOrder[0].IsTurn = true
+				S.PlayingOrder[idx].IsTurn = true
 				S.PlayingOrder[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 				for !S.PlayingOrder[idx].Played{
 					fmt.Println("\n" + "Waiting for" +  S.PlayingOrder[idx].Name + "...")
@@ -219,33 +219,29 @@ func (S *ServerStruct) Start_Game(){
 			if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 				S.PlayingOrder[0].RoundsWon += 1
 				S.BroadCast(S.PlayingOrder[0].Name  + "Won the Round")
-				S.PlayingOrder[0].IsTurn = true
-				S.PlayingOrder[0].Points += 1
 
 			}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 				S.PlayingOrder[1].RoundsWon += 1
 				S.BroadCast(S.PlayingOrder[1].Name + "Won the Round")
-				S.PlayingOrder[1].IsTurn = true
-				S.PlayingOrder[1].Points += 1
 				S.PlayingOrder = []Client{S.PlayingOrder[1], S.PlayingOrder[0]}
 				
 			}else{
 				S.BroadCast("Draw")
-				S.PlayingOrder[0].IsTurn = true
 			}
-			
 			S.Round += 1
 			S.CardsOnTable = make([]cardpack.Card, 4)
 		}
 
 	if S.PlayingOrder[0].RoundsWon > S.PlayingOrder[1].RoundsWon{
 		fmt.Println("Player 1 Won")
+		S.PlayingOrder[0].Points += 1
 	}else if S.PlayingOrder[0].RoundsWon < S.PlayingOrder[1].RoundsWon{
 		fmt.Println("Player 2 Won")
+		S.PlayingOrder[1].Points += 1
 	}else{
 		fmt.Println("Draw")
 	}
 	S.BroadCast(fmt.Sprintf(S.PlayingOrder[0].Name, S.PlayingOrder[0].Points))
 	S.BroadCast(fmt.Sprintf(S.PlayingOrder[1].Name, S.PlayingOrder[1].Points))
-}
+	}
 }
