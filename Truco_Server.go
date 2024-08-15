@@ -53,10 +53,10 @@ func main(){
 
 		connection.Write([]byte("\n" +"What would you like to be called"))		
 		NameBuff := make([]byte, 1024)
-		connection.Read(NameBuff)
+		NmSize, _ := connection.Read(NameBuff)
 		
 
-		ConnClient :=  Client{Name: string(NameBuff[:]) ,IpAddress:  connection, PlayerIndex: PlayerIndex}
+		ConnClient :=  Client{Name: string(NameBuff[:NmSize]) ,IpAddress:  connection, PlayerIndex: PlayerIndex}
 		MyServer.Clients = append(MyServer.Clients, ConnClient)
 		go MyServer.ListenToMe(PlayerIndex)
 		PlayerIndex += 1		
@@ -176,7 +176,7 @@ func (S *ServerStruct) Start_Game(){
 
 
 	var Gui []string
-	for S.Round < 3 && S.Clients[0].RoundsWon != 2 && S.Clients[1].RoundsWon != 2 {
+	for S.Round <= 3 && S.Clients[0].RoundsWon != 2 && S.Clients[1].RoundsWon != 2 {
 
 		S.CardsOnTable  = []cardpack.Card{}
 		for idx := range(len(S.Clients)){
@@ -202,12 +202,12 @@ func (S *ServerStruct) Start_Game(){
 		fmt.Println("Size of name ",  len(strings.TrimSpace(S.Clients[0].Name)))
 		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 			S.Clients[0].RoundsWon += 1
-			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name)  + "Won the Round"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name) + "Won the Round"))
+			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[0].Name  + "Won the Round"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[0].Name + "Won the Round"))
 		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 			S.Clients[1].RoundsWon += 1
-			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[1].Name)  + "Won the Round"))
-			S.Clients[1].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[1].Name) + "Won the Round"))
+			S.Clients[0].IpAddress.Write([]byte("\n" +S.Clients[1].Name  + "Won the Round"))
+			S.Clients[1].IpAddress.Write([]byte("\n" +S.Clients[1].Name + "Won the Round"))
 		}else{
 			S.Clients[0].IpAddress.Write([]byte("\n" + "Draw"))
 			S.Clients[1].IpAddress.Write([]byte("\n" + "Draw"))
