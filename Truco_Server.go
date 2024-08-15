@@ -176,7 +176,7 @@ func (S *ServerStruct) Start_Game(){
 	var Gui []string
 	for S.Round < 3 || S.Clients[0].RoundsWon != 2 || S.Clients[1].RoundsWon != 2 {
 
-
+		S.CardsOnTable  = []cardpack.Card{}
 		for idx := range(len(S.Clients)){
 			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
 			S.Clients[idx].IpAddress.Write([]byte("\n"))
@@ -195,7 +195,11 @@ func (S *ServerStruct) Start_Game(){
 			S.Clients[idx].Played = false
 			S.Clients[idx].IsTurn = false
 		}
-
+		
+		fmt.Println(cardpack.Values[S.CardsOnTable[0].Name])
+		fmt.Println(cardpack.Values[S.CardsOnTable[1].Name])
+		fmt.Println(S.CardsOnTable[0].Name)
+		fmt.Println(len(S.CardsOnTable[0].Name))
 		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 			S.Clients[0].RoundsWon += 1
 			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name)  + "Won the Round"))
