@@ -223,7 +223,8 @@ func (S *ServerStruct) Start_Game(){
 			}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 				S.PlayingOrder[1].RoundsWon += 1
 				S.BroadCast(S.PlayingOrder[1].Name + "Won the Round")
-				S.PlayingOrder[0], S.PlayingOrder[1] = S.PlayingOrder[1], S.PlayingOrder[0]
+				S.PlayingOrder = []Client{S.Clients[1], S.Clients[[0]]}
+			
 				
 			}else{
 				S.BroadCast("Draw")
