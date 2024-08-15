@@ -132,7 +132,7 @@ func UpdateGui(Round int, CurHand []Card) []string{
             copy(NewUi, DoubleUI)
         case 3:
             copy(NewUi, SingleUI)
-        }
+    }
 
     for _, Card := range(CurHand){
         NewUi[3] = strings.Replace(NewUi[3], "X", string(Card.Name[0]), 1)

@@ -119,14 +119,15 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 		if !S.OnGame{
 			if n > 0{fmt.Println(Message)}
 		}else if S.Clients[PlayerIndex].IsTurn{
-			fmt.Println(Message)
+			fmt.Println(S.Clients[PlayerIndex].Name + ": "+ Message)
 			if n > 0{
 				switch Message{
 					case "Jogar":
 						Index := make([]byte, 1024)
 						S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
+
 						sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
-						Num, _ := strconv.Atoi(string(Index[:sz]))
+						Num, _ := strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
 						CardIndex := Num -1
 
 						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
@@ -134,13 +135,15 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							S.Clients[PlayerIndex].IpAddress.Write([]byte("Enter the index of your card (1-3)"))
 							S.Clients[PlayerIndex].IpAddress.Read(Index)
 							Num, _ = strconv.Atoi(string(Index[:]))
+							CardIndex = Num -1
 						}
 						
 						PlayedCard := S.Clients[PlayerIndex].CurHand[CardIndex]
 						S.Clients[PlayerIndex].CurHand = append(S.Clients[PlayerIndex].CurHand[:CardIndex], S.Clients[PlayerIndex].CurHand[CardIndex+1:]...)
 						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+						S.Clients[PlayerIndex].Played = true
+						fmt.Println(S.Clients[PlayerIndex].CurHand[CardIndex].Name)
 
-						fmt.Println(S.Clients[PlayerIndex].CurHand[Num-1].Name)
 					case "Truco":
 						fmt.Println("Received")
 					case "Envido":
@@ -161,33 +164,36 @@ func (S *ServerStruct) Start_Game(){
 	Card := ShuffleHands()
 
 	CardNum := 0
-	for _, MyClient := range S.Clients{
-		MyClient.CurHand = append(MyClient.CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
+	for idx, _ := range S.Clients{
+		S.Clients[idx].CurHand = append(S.Clients[idx].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
 		CardNum += 3
 	}
 
 	var Gui []string
 	for idx, _ := range S.Clients{
-		Client := S.Clients[idx]
-		Gui = cardpack.UpdateGui(S.Round, Client.CurHand)
+		Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
 		for i := range(18){
-			Client.IpAddress.Write([]byte(Gui[i] + "\n"))
+			S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
 		}
 	}
 
 	for S.Round < 3 || S.OnGame{
 		for idx, _ := range(S.Clients){
-			Client := S.Clients[idx]
-			Client.IsTurn = true
-			for !Client.Played{
-				fmt.Println("Waiting for Player...")
-				time.Sleep(2 * time.Second)
+			S.Clients[idx].IsTurn = true
+			for ! S.Clients[idx].Played{
+				fmt.Println("Waiting for" +  S.Clients[idx].Name + "...")
+				time.Sleep(5 * time.Second)
 			}
 		}
 		fmt.Println(S.CardsOnTable)
 		S.Round += 1
 		S.CardsOnTable = make([]cardpack.Card, 4)
-
+		for idx, _ := range S.Clients{
+			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
+			for i := range(18){
+				S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
+			}
+		}
 	}
 
 
