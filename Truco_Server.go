@@ -26,6 +26,7 @@ type Client struct{
 	IsTurn bool
 	Played bool
 	RoundsWon int
+	Points int
 }
 
 type Game struct{
@@ -182,60 +183,67 @@ func (S *ServerStruct) Start_Game(){
 
 
 	var Gui []string
-	for S.Round <= 3 && S.Clients[0].RoundsWon != 2 && S.Clients[1].RoundsWon != 2 {
+	S.Clients[0].IsTurn = true
+	for S.Clients[0].Points < 12 && S.Clients[1].Points < 12{
+		for S.Round <= 3 && S.Clients[0].RoundsWon != 2 && S.Clients[1].RoundsWon != 2 {
 
-		S.CardsOnTable  = []cardpack.Card{}
-		for idx := range(len(S.Clients)){
-			Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
-			S.Clients[idx].IpAddress.Write([]byte("\n"))
+			S.CardsOnTable  = []cardpack.Card{}
+			for idx := range(len(S.Clients)){
+				Gui = cardpack.UpdateGui(S.Round,  S.Clients[idx].CurHand)
+				S.Clients[idx].IpAddress.Write([]byte("\n"))
 
-			for i := range(18){
-				S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
+				for i := range(18){
+					S.Clients[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
+				}
 			}
-		}
-		
-		for idx := range(len(S.Clients)){
-			S.Clients[idx].IsTurn = true
-			S.Clients[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
-			for !S.Clients[idx].Played{
-				fmt.Println("\n" + "Waiting for" +  S.Clients[idx].Name + "...")
-				time.Sleep(5 * time.Second)
+			
+			for idx := range(len(S.Clients)){
+				S.Clients[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
+				for !S.Clients[idx].Played{
+					fmt.Println("\n" + "Waiting for" +  S.Clients[idx].Name + "...")
+					time.Sleep(5 * time.Second)
+				}
+
+				S.BroadCast(S.Clients[idx].Name + "Played: ")
+				Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
+				for i := range(7){
+					S.BroadCast(Card[i])
+				}
+
+				S.Clients[idx].Played = false
+				S.Clients[idx].IsTurn = false
 			}
+			
 
-			S.BroadCast(S.Clients[idx].Name + "Played: ")
-			Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
-			for i := range(7){
-				S.BroadCast(Card[i])
+			if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
+				S.Clients[0].RoundsWon += 1
+				S.BroadCast(S.Clients[0].Name  + "Won the Round")
+
+			}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
+				S.Clients[1].RoundsWon += 1
+				S.BroadCast(S.Clients[1].Name + "Won the Round")
+
+			}else{
+				S.BroadCast("Draw")
 			}
-
-			S.Clients[idx].Played = false
-			S.Clients[idx].IsTurn = false
+			
+			S.Round += 1
+			S.CardsOnTable = make([]cardpack.Card, 4)
 		}
-		
-
-		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
-			S.Clients[0].RoundsWon += 1
-			S.BroadCast(S.Clients[0].Name  + "Won the Round")
-
-		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
-			S.Clients[1].RoundsWon += 1
-			S.BroadCast(S.Clients[1].Name + "Won the Round")
-
-		}else{
-			S.BroadCast("Draw")
-		}
-		
-		S.Round += 1
-		S.CardsOnTable = make([]cardpack.Card, 4)
-	}
 
 	if S.Clients[0].RoundsWon > S.Clients[1].RoundsWon{
 		fmt.Println("Player 1 Won")
+		S.Clients[0].IsTurn = true
+		S.Clients[0].Points += 1
 	}else if S.Clients[0].RoundsWon < S.Clients[1].RoundsWon{
 		fmt.Println("Player 2 Won")
+		S.Clients[1].IsTurn = true
+		S.Clients[1].Points += 1
 	}else{
 		fmt.Println("Draw")
+		S.Clients[0].IsTurn = true
 	}
-
-
+	S.BroadCast(fmt.Sprintf(S.Clients[0].Name, S.Clients[0].Points))
+	S.BroadCast(fmt.Sprintf(S.Clients[1].Name, S.Clients[1].Points))
+}
 }
