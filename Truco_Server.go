@@ -157,6 +157,8 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						fmt.Println("Received")
 				}
 			}
+		}else{
+			S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" + "Not your turn"))
 		}
 	}
 }
@@ -196,12 +198,9 @@ func (S *ServerStruct) Start_Game(){
 			S.Clients[idx].IsTurn = false
 		}
 		
-		fmt.Println(cardpack.Values[S.CardsOnTable[0].Name])
-		fmt.Println(cardpack.Values[S.CardsOnTable[1].Name])
-		fmt.Println(S.CardsOnTable[0].Name)
-		fmt.Println(len(S.CardsOnTable[0].Name))
 		if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 			S.Clients[0].RoundsWon += 1
+			fmt.Sprintf("Size of name ",  len(strings.TrimSpace(S.Clients[0].Name)))
 			S.Clients[0].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name)  + "Won the Round"))
 			S.Clients[1].IpAddress.Write([]byte("\n" +strings.TrimSpace(S.Clients[0].Name) + "Won the Round"))
 		}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
