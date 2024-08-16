@@ -158,7 +158,15 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 					case "Queimar":
 						fmt.Println("Received")
 					case "Correr":
-						fmt.Println("Received")
+						if S.Clients[PlayerIndex].PlayerIndex == 0{
+							S.Clients[PlayerIndex + 1].RoundsWon = 2
+						}else{
+							S.Clients[PlayerIndex -1].RoundsWon = 2
+						}
+
+						PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
+						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+						S.Clients[PlayerIndex].Played = true
 					case "Flor":
 						fmt.Println("Received")
 				}
@@ -191,6 +199,7 @@ func (S *ServerStruct) Start_Game(){
 			S.Clients[0].Played = false
 			S.Clients[1].Played = false
 			S.CardsOnTable  = []cardpack.Card{}
+
 			for idx := range(len(S.Clients)){
 				Gui = cardpack.UpdateGui(S.Round,  S.Clients[PlayingOrder[idx].PlayerIndex].CurHand)
 				S.Clients[PlayingOrder[idx].PlayerIndex].IpAddress.Write([]byte("\n"))

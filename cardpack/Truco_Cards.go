@@ -56,6 +56,16 @@ func CreateTerminalRepr(Card string) []string{
     return NewCard
 }
 
+var ResignationCard = []string{
+    "+----------+",
+    "|          |",
+    "|  RESIGN  |",
+    "|          |",
+    "| I'm out! |",
+    "|          |",
+    "+----------+",
+}
+
 var TripleUI = []string{
     ".--------------------------------------------------------------------.",
     "|                                                                    |",
