@@ -16,7 +16,6 @@ type ServerStruct struct{
 	OnGame bool
 	Round int
 	CardsOnTable []cardpack.Card
-	PlayingOrder []Client
 }
 
 type Client struct{
@@ -171,7 +170,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 }
 
 func (S *ServerStruct) Start_Game(){
-	S.PlayingOrder = S.Clients
+	PlayingOrder := S.Clients
 
 
 	var Gui []string
@@ -182,8 +181,8 @@ func (S *ServerStruct) Start_Game(){
 		Card := ShuffleHands()
 		CardNum := 0
 		for idx := range(len(S.Clients)){
-			S.PlayingOrder[idx].CurHand = append(S.PlayingOrder[idx].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
-			S.Clients[S.PlayingOrder[idx].PlayerIndex].CurHand = S.PlayingOrder[idx].CurHand
+			S.Clients[PlayingOrder[idx].PlayerIndex].CurHand = append(S.Clients[PlayingOrder[idx].PlayerIndex].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
+	
 			CardNum += 3
 		}
 
@@ -191,65 +190,63 @@ func (S *ServerStruct) Start_Game(){
 			S.Clients[0].Played = false
 			S.Clients[1].Played = false
 			S.CardsOnTable  = []cardpack.Card{}
-			for idx := range(len(S.PlayingOrder)){
-				Gui = cardpack.UpdateGui(S.Round,  S.PlayingOrder[idx].CurHand)
-				S.PlayingOrder[idx].IpAddress.Write([]byte("\n"))
+			for idx := range(len(S.Clients)){
+				Gui = cardpack.UpdateGui(S.Round,  S.Clients[PlayingOrder[idx].PlayerIndex].CurHand)
+				S.Clients[PlayingOrder[idx].PlayerIndex].IpAddress.Write([]byte("\n"))
 
 				for i := range(18){
-					S.PlayingOrder[idx].IpAddress.Write([]byte(Gui[i] + "\n"))
+					S.Clients[PlayingOrder[idx].PlayerIndex].IpAddress.Write([]byte(Gui[i] + "\n"))
 				}
 			}
 			
-			for idx := range(len(S.PlayingOrder)){
-				S.PlayingOrder[idx].IsTurn = true
-				S.Clients[S.PlayingOrder[idx].PlayerIndex].IsTurn = true
-				S.PlayingOrder[idx].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
+			for idx := range(len(S.Clients)){
+				S.Clients[PlayingOrder[idx].PlayerIndex].IsTurn = true
+				S.Clients[PlayingOrder[idx].PlayerIndex].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 
-				for !S.Clients[S.PlayingOrder[idx].PlayerIndex].Played {
-					fmt.Println("\n" + "Waiting for" +  S.PlayingOrder[idx].Name + "...")
+				for !S.Clients[PlayingOrder[idx].PlayerIndex].Played {
+					fmt.Println("\n" + "Waiting for" +  S.Clients[PlayingOrder[idx].PlayerIndex].Name + "...")
 					time.Sleep(5 * time.Second)
 				}
 
-				S.BroadCast(S.PlayingOrder[idx].Name + "Played: ")
+				S.BroadCast(S.Clients[PlayingOrder[idx].PlayerIndex].Name + "Played: ")
 				Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
 				for i := range(7){
 					S.BroadCast(Card[i])
 				}
 
-				S.PlayingOrder[idx].Played = false
-				S.PlayingOrder[idx].IsTurn = false
+				S.Clients[PlayingOrder[idx].PlayerIndex].Played = false
+				S.Clients[PlayingOrder[idx].PlayerIndex].IsTurn = false
 			}
 			
 
 			if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
-				S.PlayingOrder[0].RoundsWon += 1
-				S.BroadCast(S.PlayingOrder[0].Name  + "Won the Round")
+				S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon += 1
+				S.BroadCast(S.Clients[PlayingOrder[0].PlayerIndex].Name  + "Won the Round")
 
 			}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
-				S.PlayingOrder[1].RoundsWon += 1
-				S.BroadCast(S.PlayingOrder[1].Name + "Won the Round")
-				S.PlayingOrder = []Client{S.Clients[1], S.Clients[0]}
+				S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon += 1
+				S.BroadCast(S.Clients[PlayingOrder[1].PlayerIndex].Name + "Won the Round")
+				PlayingOrder = []Client{S.Clients[1], S.Clients[0]}
 			
-				
 			}else{
-				S.PlayingOrder[0].RoundsWon += 1
-				S.PlayingOrder[1].RoundsWon += 1
+				S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon += 1
+				S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon += 1
 				S.BroadCast("Draw")
 			}
 			S.Round += 1
 			S.CardsOnTable = make([]cardpack.Card, 4)
 		}
 
-	if S.PlayingOrder[0].RoundsWon > S.PlayingOrder[1].RoundsWon{
+	if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon > S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
 		fmt.Println("Player 1 Won")
-		S.PlayingOrder[0].Points += 1
-	}else if S.PlayingOrder[0].RoundsWon < S.PlayingOrder[1].RoundsWon{
+		S.Clients[PlayingOrder[0].PlayerIndex].Points += 1
+	}else if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon < S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
 		fmt.Println("Player 2 Won")
-		S.PlayingOrder[1].Points += 1
+		S.Clients[PlayingOrder[1].PlayerIndex].Points += 1
 	}else{
 		fmt.Println("Draw")
 	}
-	S.BroadCast(fmt.Sprintf("%s: %d", S.PlayingOrder[0].Name, S.PlayingOrder[0].Points))
-	S.BroadCast(fmt.Sprintf("%s: %d", S.PlayingOrder[1].Name, S.PlayingOrder[1].Points))
+	S.BroadCast(fmt.Sprintf("%s: %d",S.Clients[PlayingOrder[0].PlayerIndex].Name, S.Clients[PlayingOrder[0].PlayerIndex].Points))
+	S.BroadCast(fmt.Sprintf("%s: %d", S.Clients[PlayingOrder[1].PlayerIndex].Name, S.Clients[PlayingOrder[1].PlayerIndex].Points))
 	}
 }
