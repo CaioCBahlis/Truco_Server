@@ -136,16 +136,23 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 					case "Truco":
 						Response := make([]byte, 16)
 						S.BroadCast(fmt.Sprintf("%s PEDIU TRUCO NEWBA", S.Clients[PlayerIndex].Name))
+						var MyClient Client
 						if PlayerIndex == 1{
 							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
-							sz, _ := S.Clients[PlayerIndex-1].IpAddress.Read(Response)
+							S.Clients[PlayerIndex-1].IsTurn = true
+							MyClient = S.Clients[PlayerIndex-1]
+						}else{
+							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							S.Clients[PlayerIndex+1].IsTurn = true
+							MyClient = S.Clients[PlayerIndex-1]
+						}
+							sz, _ :=  MyClient.IpAddress.Read(Response)
 							ClientResponse := string(Response[:sz])
 							if ClientResponse == "y"{
 								S.PointsOnWin = 3
 								S.BroadCast("Truco Aceito")
 								S.Jogar(PlayerIndex)
 								
-
 							}else if ClientResponse == "n"{
 
 								if S.Clients[PlayerIndex].PlayerIndex == 0{
@@ -154,19 +161,18 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 									S.Clients[PlayerIndex -1].RoundsWon = 2
 								}
 		
-								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
+								PlayedCard := cardpack.Card{Name: "Queimar", Value: 0, Repr: cardpack.QueimadoCard}
 								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 								S.Clients[PlayerIndex].Played = true
 							}
-						}
 						
-
-
+						
 					case "Envido":
 						fmt.Println("Received")
 
 					case "Queimar":
-
+						S.Jogar(PlayerIndex)
+						S.CardsOnTable[len(S.CardsOnTable)-1] = cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 						
 					case "Correr":
 						if S.Clients[PlayerIndex].PlayerIndex == 0{
