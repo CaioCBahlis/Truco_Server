@@ -180,6 +180,7 @@ func (S *ServerStruct) Start_Game(){
 		S.Clients[1].RoundsWon = 0
 		Card := ShuffleHands()
 		CardNum := 0
+
 		for idx := range(len(S.Clients)){
 			S.Clients[PlayingOrder[idx].PlayerIndex].CurHand = append(S.Clients[PlayingOrder[idx].PlayerIndex].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
 	
@@ -226,7 +227,7 @@ func (S *ServerStruct) Start_Game(){
 			}else if cardpack.Values[S.CardsOnTable[0].Name] < cardpack.Values[S.CardsOnTable[1].Name]{
 				S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon += 1
 				S.BroadCast(S.Clients[PlayingOrder[1].PlayerIndex].Name + "Won the Round")
-				PlayingOrder = []Client{S.Clients[1], S.Clients[0]}
+				PlayingOrder = []Client{PlayingOrder[1], PlayingOrder[0]}
 			
 			}else{
 				S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon += 1
