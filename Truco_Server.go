@@ -183,6 +183,7 @@ func (S *ServerStruct) Start_Game(){
 		CardNum := 0
 		for idx := range(len(S.Clients)){
 			S.PlayingOrder[idx].CurHand = append(S.PlayingOrder[idx].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
+			S.Clients[S.PlayingOrder[idx].PlayerIndex].CurHand = S.PlayingOrder[idx].CurHand
 			CardNum += 3
 		}
 
