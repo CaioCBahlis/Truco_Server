@@ -195,7 +195,7 @@ func (S *ServerStruct) Start_Game(){
 			CardNum += 3
 		}
 
-		for S.Round <= 3 && S.Clients[0].RoundsWon != 2 && S.Clients[1].RoundsWon != 2 {
+		for S.Round <= 3 && S.Clients[0].RoundsWon < 2 && S.Clients[1].RoundsWon < 2 {
 			S.Clients[0].Played = false
 			S.Clients[1].Played = false
 			S.CardsOnTable  = []cardpack.Card{}
@@ -218,6 +218,7 @@ func (S *ServerStruct) Start_Game(){
 					time.Sleep(5 * time.Second)
 				}
 
+				
 				S.BroadCast(S.Clients[PlayingOrder[idx].PlayerIndex].Name + "Played: ")
 				Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
 				for i := range(7){
@@ -246,17 +247,18 @@ func (S *ServerStruct) Start_Game(){
 			S.Round += 1
 			S.CardsOnTable = make([]cardpack.Card, 4)
 		}
-
-	if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon > S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
-		fmt.Println("Player 1 Won")
-		S.Clients[PlayingOrder[0].PlayerIndex].Points += 1
-	}else if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon < S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
-		fmt.Println("Player 2 Won")
-		S.Clients[PlayingOrder[1].PlayerIndex].Points += 1
-	}else{
-		fmt.Println("Draw")
-	}
-	S.BroadCast(fmt.Sprintf("%s: %d",S.Clients[PlayingOrder[0].PlayerIndex].Name, S.Clients[PlayingOrder[0].PlayerIndex].Points))
-	S.BroadCast(fmt.Sprintf("%s: %d", S.Clients[PlayingOrder[1].PlayerIndex].Name, S.Clients[PlayingOrder[1].PlayerIndex].Points))
+	
+	
+		if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon > S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
+			fmt.Println("Player 1 Won")
+			S.Clients[PlayingOrder[0].PlayerIndex].Points += 1
+		}else if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon < S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
+			fmt.Println("Player 2 Won")
+			S.Clients[PlayingOrder[1].PlayerIndex].Points += 1
+		}else{
+			fmt.Println("Draw")
+		}
+		S.BroadCast(fmt.Sprintf("%s: %d",S.Clients[PlayingOrder[0].PlayerIndex].Name, S.Clients[PlayingOrder[0].PlayerIndex].Points))
+		S.BroadCast(fmt.Sprintf("%s: %d", S.Clients[PlayingOrder[1].PlayerIndex].Name, S.Clients[PlayingOrder[1].PlayerIndex].Points))
 	}
 }
