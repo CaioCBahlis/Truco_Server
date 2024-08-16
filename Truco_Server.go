@@ -91,7 +91,6 @@ func main(){
 		time.Sleep(1 * time.Second)
 
 		MyServer.OnGame = true
-		MyServer.Round = 1
 		MyServer.Start_Game()
 	
 }
@@ -177,7 +176,9 @@ func (S *ServerStruct) Start_Game(){
 
 	var Gui []string
 	for S.Clients[0].Points < 12 && S.Clients[1].Points < 12{
-
+		S.Round = 1
+		S.Clients[0].RoundsWon = 0
+		S.Clients[1].RoundsWon = 0
 		Card := ShuffleHands()
 		CardNum := 0
 		for idx := range(len(S.Clients)){
@@ -186,7 +187,8 @@ func (S *ServerStruct) Start_Game(){
 		}
 
 		for S.Round <= 3 && S.Clients[0].RoundsWon != 2 && S.Clients[1].RoundsWon != 2 {
-
+			S.Clients[0].Played = false
+			S.Clients[1].Played = false
 			S.CardsOnTable  = []cardpack.Card{}
 			for idx := range(len(S.PlayingOrder)){
 				Gui = cardpack.UpdateGui(S.Round,  S.PlayingOrder[idx].CurHand)
