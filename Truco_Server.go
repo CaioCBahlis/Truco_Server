@@ -16,6 +16,7 @@ type ServerStruct struct{
 	OnGame bool
 	Round int
 	CardsOnTable []cardpack.Card
+	PointsOnWin int
 }
 
 type Client struct{
@@ -118,7 +119,6 @@ func (S *ServerStruct) BroadCast(message string){
 
 
 func (S *ServerStruct) ListenToMe(PlayerIndex int){
-	
 	mybuff := make([]byte, 1024)
 	for {
 		n, _ := S.Clients[PlayerIndex].IpAddress.Read(mybuff)
@@ -131,32 +131,43 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 			if n > 0{
 				switch Message{
 					case "Jogar":
-						Index := make([]byte, 1024)
-						S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
-
-						sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
-						Num, _ := strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
-						CardIndex := Num -1
-
-						for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
-							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Invalid Index"))
-							S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
-							sz, _ = S.Clients[PlayerIndex].IpAddress.Read(Index)
-							Num, _ = strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
-							CardIndex = Num -1
-						}
-						
-						PlayedCard := S.Clients[PlayerIndex].CurHand[CardIndex]
-						S.Clients[PlayerIndex].CurHand = append(S.Clients[PlayerIndex].CurHand[:CardIndex], S.Clients[PlayerIndex].CurHand[CardIndex+1:]...)
-						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
-						S.Clients[PlayerIndex].Played = true
+						S.Jogar(PlayerIndex)
 						
 					case "Truco":
-						fmt.Println("Received")
+						Response := make([]byte, 16)
+						S.BroadCast(fmt.Sprintf("%s PEDIU TRUCO NEWBA", S.Clients[PlayerIndex].Name))
+						if PlayerIndex == 1{
+							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							sz, _ := S.Clients[PlayerIndex-1].IpAddress.Read(Response)
+							ClientResponse := string(Response[:sz])
+							if ClientResponse == "y"{
+								S.PointsOnWin = 3
+								S.BroadCast("Truco Aceito")
+								S.Jogar(PlayerIndex)
+								
+
+							}else if ClientResponse == "n"{
+
+								if S.Clients[PlayerIndex].PlayerIndex == 0{
+									S.Clients[PlayerIndex + 1].RoundsWon = 2
+								}else{
+									S.Clients[PlayerIndex -1].RoundsWon = 2
+								}
+		
+								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
+								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+								S.Clients[PlayerIndex].Played = true
+							}
+						}
+						
+
+
 					case "Envido":
 						fmt.Println("Received")
+
 					case "Queimar":
-						fmt.Println("Received")
+
+						
 					case "Correr":
 						if S.Clients[PlayerIndex].PlayerIndex == 0{
 							S.Clients[PlayerIndex + 1].RoundsWon = 2
@@ -167,6 +178,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 						S.Clients[PlayerIndex].Played = true
+
 					case "Flor":
 						fmt.Println("Received")
 				}
@@ -175,6 +187,28 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 			S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" + "Not your turn"))
 		}
 	}
+}
+
+func (S *ServerStruct) Jogar(PlayerIndex int){
+	Index := make([]byte, 1024)
+	S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
+
+	sz, _ := S.Clients[PlayerIndex].IpAddress.Read(Index)
+	Num, _ := strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
+	CardIndex := Num -1
+
+	for CardIndex > len(S.Clients[PlayerIndex].CurHand)-1 || CardIndex < 0{
+		S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Invalid Index"))
+		S.Clients[PlayerIndex].IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
+		sz, _ = S.Clients[PlayerIndex].IpAddress.Read(Index)
+		Num, _ = strconv.Atoi(strings.TrimSpace(string(Index[:sz])))
+		CardIndex = Num -1
+	}
+						
+	PlayedCard := S.Clients[PlayerIndex].CurHand[CardIndex]
+	S.Clients[PlayerIndex].CurHand = append(S.Clients[PlayerIndex].CurHand[:CardIndex], S.Clients[PlayerIndex].CurHand[CardIndex+1:]...)
+	S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+	S.Clients[PlayerIndex].Played = true
 }
 
 func (S *ServerStruct) Start_Game(){
@@ -186,6 +220,7 @@ func (S *ServerStruct) Start_Game(){
 		S.Round = 1
 		S.Clients[0].RoundsWon = 0
 		S.Clients[1].RoundsWon = 0
+		S.PointsOnWin = 1
 		Card := ShuffleHands()
 		CardNum := 0
 
@@ -251,10 +286,10 @@ func (S *ServerStruct) Start_Game(){
 	
 		if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon > S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
 			fmt.Println("Player 1 Won")
-			S.Clients[PlayingOrder[0].PlayerIndex].Points += 1
+			S.Clients[PlayingOrder[0].PlayerIndex].Points += S.PointsOnWin
 		}else if S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon < S.Clients[PlayingOrder[1].PlayerIndex].RoundsWon{
 			fmt.Println("Player 2 Won")
-			S.Clients[PlayingOrder[1].PlayerIndex].Points += 1
+			S.Clients[PlayingOrder[1].PlayerIndex].Points += S.PointsOnWin
 		}else{
 			fmt.Println("Draw")
 		}

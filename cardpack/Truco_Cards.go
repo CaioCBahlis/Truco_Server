@@ -49,6 +49,10 @@ func CreateTerminalRepr(Card string) []string{
     NewCard := make([]string, len(CardRepr))
     copy(NewCard, CardRepr)
 
+    if Card == "Resign"{
+        return ResignationCard
+    }
+
 
     NewCard[1] = NewCard[1][0:4] + string(Card[0]) + NewCard[1][5:]
     NewCard[3] = NewCard[2][0:4] + string([]rune(Card)[1]) + NewCard[2][5:]
