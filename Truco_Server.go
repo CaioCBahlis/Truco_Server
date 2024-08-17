@@ -219,6 +219,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Clients[PlayerIndex].Played = true
 
 					case "Flor":
+
 						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[1].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1] &&  S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1]{
 							fmt.Println(S.Clients[PlayerIndex].CurHand[0].Name[1], S.Clients[PlayerIndex].CurHand[1].Name[1], S.Clients[PlayerIndex].CurHand[2].Name[1])
 							S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
@@ -290,14 +291,9 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 
 						}
 
-						}else{
-							S.Clients[PlayerIndex].IpAddress.Write([]byte("Not a Flor"))
-
-						}
-
-
-						
-							
+					}else{
+						S.Clients[PlayerIndex].IpAddress.Write([]byte("Not a Flor"))
+					}
 
 					case "y":
 						S.Truco = "y"
@@ -310,11 +306,6 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Flor = "n"
 						S.Clients[PlayerIndex].IsTurn = false
 						S.Resigned = true
-
-			
-
-						
-
 
 				}
 			}
@@ -355,6 +346,9 @@ func (S *ServerStruct) Start_Game(){
 		S.Round = 1
 		S.Clients[0].RoundsWon = 0
 		S.Clients[1].RoundsWon = 0
+		S.Truco = ""
+		S.Envido = ""
+		S.Flor = ""
 		S.Resigned = false
 		S.PointsOnWin = 1
 		Card := ShuffleHands()
@@ -400,11 +394,12 @@ func (S *ServerStruct) Start_Game(){
 				S.Clients[PlayingOrder[idx].PlayerIndex].Played = false
 				S.Clients[PlayingOrder[idx].PlayerIndex].IsTurn = false
 
-				if S.Resigned{
-					break
-				}
+				
 			}
 			
+			if S.Resigned{
+				break
+			}
 
 			if cardpack.Values[S.CardsOnTable[0].Name] > cardpack.Values[S.CardsOnTable[1].Name] {
 				S.Clients[PlayingOrder[0].PlayerIndex].RoundsWon += 1
