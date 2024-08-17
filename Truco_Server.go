@@ -175,6 +175,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.CardsOnTable[len(S.CardsOnTable)-1] = cardpack.Card{Name: "Queimar", Value: 0, Repr: cardpack.QueimadoCard}
 						
 					case "Correr":
+
 						if S.Clients[PlayerIndex].PlayerIndex == 0{
 							S.Clients[PlayerIndex + 1].RoundsWon = 2
 						}else{
@@ -187,6 +188,25 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 
 					case "Flor":
 						fmt.Println("Received")
+					case "y":
+
+						if S.Clients[PlayerIndex].PlayerIndex == 0{
+							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("y"))
+						}else{
+							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("y"))
+						}
+					case "n":
+
+						if S.Clients[PlayerIndex].PlayerIndex == 0{
+							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("n"))
+						}else{
+							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("n"))
+						}
+			
+
+						
+
+
 				}
 			}
 		}else{
