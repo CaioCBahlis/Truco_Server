@@ -20,6 +20,7 @@ type ServerStruct struct{
 	Truco string
 	Envido string
 	Flor string
+	Resigned bool
 }
 
 type Client struct{
@@ -159,6 +160,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 									
 						}else if S.Truco== "n"{
 
+								S.BroadCast("Truco Negado")
 								if S.Clients[PlayerIndex].PlayerIndex == 0{
 									S.Clients[PlayerIndex + 1].RoundsWon = 2
 								}else{
@@ -174,7 +176,29 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							
 						
 					case "Envido":
-						fmt.Println("Received")
+						S.BroadCast(fmt.Sprintf("%s PEDIU ENVIDO NEWBA", S.Clients[PlayerIndex].Name))
+						if PlayerIndex == 1{
+							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							S.Clients[PlayerIndex-1].IsTurn = true
+						}else{
+							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							S.Clients[PlayerIndex+1].IsTurn = true
+						}
+
+						for S.Envido != "y" && S.Envido != "n"{
+							fmt.Println("Waiting for Newba")
+							time.Sleep(2 * time.Second)
+						}
+
+						if S.Envido == "y"{
+							S.BroadCast("Envido Aceito")
+							
+						}else if S.Envido == "n"{
+
+								S.BroadCast("Envido Negado")
+								S.Clients[PlayerIndex].Points += 1
+								S.Envido = ""
+						}
 
 					case "Queimar":
 						S.Jogar(PlayerIndex)
@@ -193,14 +217,98 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Clients[PlayerIndex].Played = true
 
 					case "Flor":
-						fmt.Println("Received")
+						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[2].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] &&  S.Clients[PlayerIndex].CurHand[1].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1]{
+							
+								
+						S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
+						var Oponent Client
+						if PlayerIndex == 1{
+							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							S.Clients[PlayerIndex-1].IsTurn = true
+							Oponent = S.Clients[PlayerIndex-1]
+						}else{
+							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							S.Clients[PlayerIndex+1].IsTurn = true
+							Oponent = S.Clients[PlayerIndex+1]
+						}
+
+						for S.Flor != "y" && S.Flor != "n"{
+							fmt.Println("Waiting for Newba")
+							time.Sleep(2 * time.Second)
+						}
+
+						if S.Flor == "y"{
+							
+							var P0Value int
+							var P1Value int
+							for _, Card := range(S.Clients[PlayerIndex].CurHand){
+								if Card.Value >= 10{
+									P0Value += 1
+								}else{
+									P0Value += Card.Value
+								}
+							}
+
+							var Suit byte
+							for  _, Card := range(S.Clients[PlayerIndex].CurHand){
+								if Suit == 0{
+									Suit = Card.Name[1]
+								}else{
+									if Suit != Card.Name[1]{
+										Oponent.IpAddress.Write([]byte("Not a Flor"))
+										P1Value = 0
+										break
+									}else{
+										if Card.Value > 10{
+											P1Value += 1
+										}else{
+											P1Value += Card.Value
+										}
+									}
+								}
+							}
+
+							if P1Value > P0Value{
+								Oponent.Points += 6
+								S.BroadCast("P0 Won")
+							}else if P0Value > P1Value{
+								Oponent.Points += 3
+								S.BroadCast("P1 Won")
+							}
+
+						}
+
+						if S.Flor == "n"{
+							S.BroadCast("Truco Negado")
+								if S.Clients[PlayerIndex].PlayerIndex == 0{
+									S.Clients[PlayerIndex + 1].Points += 1
+								}else{
+									S.Clients[PlayerIndex -1].Points += 1
+								}
+								S.Flor = ""
+
+						}
+
+						}else{
+							S.Clients[PlayerIndex].IpAddress.Write([]byte("Not a Flor"))
+
+						}
+
+
+						
+							
 
 					case "y":
 						S.Truco = "y"
+						S.Envido = "y"
+						S.Flor = "y"
 						S.Clients[PlayerIndex].IsTurn = false
 					case "n":
 						S.Truco = "n"
+						S.Envido = "n"
+						S.Flor = "n"
 						S.Clients[PlayerIndex].IsTurn = false
+						S.Resigned = true
 
 			
 
@@ -246,6 +354,7 @@ func (S *ServerStruct) Start_Game(){
 		S.Round = 1
 		S.Clients[0].RoundsWon = 0
 		S.Clients[1].RoundsWon = 0
+		S.Resigned = false
 		S.PointsOnWin = 1
 		Card := ShuffleHands()
 		CardNum := 0
@@ -274,7 +383,7 @@ func (S *ServerStruct) Start_Game(){
 				S.Clients[PlayingOrder[idx].PlayerIndex].IsTurn = true
 				S.Clients[PlayingOrder[idx].PlayerIndex].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 
-				for !S.Clients[PlayingOrder[idx].PlayerIndex].Played {
+				for !S.Clients[PlayingOrder[idx].PlayerIndex].Played && !S.Resigned {
 					fmt.Println("\n" + "Waiting for" +  S.Clients[PlayingOrder[idx].PlayerIndex].Name + "...")
 					time.Sleep(5 * time.Second)
 				}
