@@ -146,28 +146,31 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							S.Clients[PlayerIndex+1].IsTurn = true
 						}
 
-						for S.Truco != "y"  || S.Truco != "n"{
-
-							if S.Truco == "y"{
-								S.PointsOnWin = 3
-								S.BroadCast("Truco Aceito")
-								S.Jogar(PlayerIndex)
-								S.Truco = ""
-									
-							}else if S.Truco== "n"{
-								
-									if S.Clients[PlayerIndex].PlayerIndex == 0{
-										S.Clients[PlayerIndex + 1].RoundsWon = 2
-									}else{
-										S.Clients[PlayerIndex -1].RoundsWon = 2
-									}
-
-									PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
-									S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
-									S.Clients[PlayerIndex].Played = true
-									S.Truco = ""
-							}
+						for S.Truco != "y"  && S.Truco != "n"{
+							fmt.Println("Waiting for Newba")
+							time.Sleep(1 * time.Second)
 						}
+
+						if S.Truco == "y"{
+							S.PointsOnWin = 3
+							S.BroadCast("Truco Aceito")
+							S.Jogar(PlayerIndex)
+							S.Truco = ""
+									
+						}else if S.Truco== "n"{
+
+								if S.Clients[PlayerIndex].PlayerIndex == 0{
+									S.Clients[PlayerIndex + 1].RoundsWon = 2
+								}else{
+									S.Clients[PlayerIndex -1].RoundsWon = 2
+								}
+
+								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
+								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+								S.Clients[PlayerIndex].Played = true
+								S.Truco = ""
+						}
+						
 							
 						
 					case "Envido":
