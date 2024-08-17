@@ -384,20 +384,25 @@ func (S *ServerStruct) Start_Game(){
 				S.Clients[PlayingOrder[idx].PlayerIndex].IsTurn = true
 				S.Clients[PlayingOrder[idx].PlayerIndex].IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 
-				for !S.Clients[PlayingOrder[idx].PlayerIndex].Played && !S.Resigned {
+				for !S.Clients[PlayingOrder[idx].PlayerIndex].Played && !S.Resigned{
 					fmt.Println("\n" + "Waiting for" +  S.Clients[PlayingOrder[idx].PlayerIndex].Name + "...")
 					time.Sleep(5 * time.Second)
 				}
 
-				
-				S.BroadCast(S.Clients[PlayingOrder[idx].PlayerIndex].Name + "Played: ")
-				Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
-				for i := range(7){
-					S.BroadCast(Card[i])
+				if !S.Resigned{
+					S.BroadCast(S.Clients[PlayingOrder[idx].PlayerIndex].Name + "Played: ")
+					Card := cardpack.CreateTerminalRepr(S.CardsOnTable[len(S.CardsOnTable)-1].Name)
+					for i := range(7){
+						S.BroadCast(Card[i])
 				}
+			}
 
 				S.Clients[PlayingOrder[idx].PlayerIndex].Played = false
 				S.Clients[PlayingOrder[idx].PlayerIndex].IsTurn = false
+
+				if S.Resigned{
+					break
+				}
 			}
 			
 
