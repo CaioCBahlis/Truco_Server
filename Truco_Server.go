@@ -17,6 +17,9 @@ type ServerStruct struct{
 	Round int
 	CardsOnTable []cardpack.Card
 	PointsOnWin int
+	Truco string
+	Envido string
+	Flor string
 }
 
 type Client struct{
@@ -134,38 +137,38 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Jogar(PlayerIndex)
 						
 					case "Truco":
-						Response := make([]byte, 16)
 						S.BroadCast(fmt.Sprintf("%s PEDIU TRUCO NEWBA", S.Clients[PlayerIndex].Name))
-						var MyClient Client
 						if PlayerIndex == 1{
 							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex-1].IsTurn = true
-							MyClient = S.Clients[PlayerIndex-1]
 						}else{
 							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex+1].IsTurn = true
-							MyClient = S.Clients[PlayerIndex-1]
 						}
-							sz, _ :=  MyClient.IpAddress.Read(Response)
-							ClientResponse := string(Response[:sz])
-							if ClientResponse == "y"{
+
+						for S.Truco != "y"  || S.Truco != "n"{
+
+							if S.Truco == "y"{
 								S.PointsOnWin = 3
 								S.BroadCast("Truco Aceito")
 								S.Jogar(PlayerIndex)
+								S.Truco = ""
+									
+							}else if S.Truco== "n"{
 								
-							}else if ClientResponse == "n"{
+									if S.Clients[PlayerIndex].PlayerIndex == 0{
+										S.Clients[PlayerIndex + 1].RoundsWon = 2
+									}else{
+										S.Clients[PlayerIndex -1].RoundsWon = 2
+									}
 
-								if S.Clients[PlayerIndex].PlayerIndex == 0{
-									S.Clients[PlayerIndex + 1].RoundsWon = 2
-								}else{
-									S.Clients[PlayerIndex -1].RoundsWon = 2
-								}
-
-								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
-								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
-								S.Clients[PlayerIndex].Played = true
+									PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
+									S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
+									S.Clients[PlayerIndex].Played = true
+									S.Truco = ""
 							}
-						
+						}
+							
 						
 					case "Envido":
 						fmt.Println("Received")
@@ -188,20 +191,14 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 
 					case "Flor":
 						fmt.Println("Received")
+
 					case "y":
-
-						if S.Clients[PlayerIndex].PlayerIndex == 0{
-							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("y"))
-						}else{
-							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("y"))
-						}
+						S.Truco = "y"
+						S.Clients[PlayerIndex].IsTurn = false
 					case "n":
+						S.Truco = "n"
+						S.Clients[PlayerIndex].IsTurn = false
 
-						if S.Clients[PlayerIndex].PlayerIndex == 0{
-							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("n"))
-						}else{
-							S.Clients[PlayerIndex + 1].IpAddress.Write([]byte("n"))
-						}
 			
 
 						
