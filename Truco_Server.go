@@ -217,7 +217,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Clients[PlayerIndex].Played = true
 
 					case "Flor":
-						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[2].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] &&  S.Clients[PlayerIndex].CurHand[1].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1]{
+						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[2].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] &&  S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1]{
 							
 								
 						S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
