@@ -32,6 +32,7 @@ type Client struct{
 	Played bool
 	RoundsWon int
 	Points int
+
 }
 
 type Game struct{
@@ -170,6 +171,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 								S.Clients[PlayerIndex].Played = true
+								S.Resigned = true
 								S.Truco = ""
 						}
 						
@@ -217,15 +219,14 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Clients[PlayerIndex].Played = true
 
 					case "Flor":
-						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[2].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] &&  S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1]{
-							
-								
-						S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
-						var Oponent Client
-						if PlayerIndex == 1{
-							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
-							S.Clients[PlayerIndex-1].IsTurn = true
-							Oponent = S.Clients[PlayerIndex-1]
+						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[1].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1] &&  S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1]{
+							fmt.Println(S.Clients[PlayerIndex].CurHand[0].Name[1], S.Clients[PlayerIndex].CurHand[1].Name[1], S.Clients[PlayerIndex].CurHand[2].Name[1])
+							S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
+							var Oponent Client
+							if PlayerIndex == 1{
+								S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+								S.Clients[PlayerIndex-1].IsTurn = true
+								Oponent = S.Clients[PlayerIndex-1]
 						}else{
 							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex+1].IsTurn = true
