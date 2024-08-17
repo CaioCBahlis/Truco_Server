@@ -220,7 +220,11 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 
 					case "Flor":
 
-						if S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[1].Name[1] && S.Clients[PlayerIndex].CurHand[1].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1] &&  S.Clients[PlayerIndex].CurHand[0].Name[1] == S.Clients[PlayerIndex].CurHand[2].Name[1]{
+						suit1 := []rune(S.Clients[PlayerIndex].CurHand[0].Name)[1]
+						suit2 := []rune(S.Clients[PlayerIndex].CurHand[1].Name)[1]
+						suit3 := []rune(S.Clients[PlayerIndex].CurHand[2].Name)[1]
+
+						if suit1 == suit2 && suit1 == suit3{
 							fmt.Println(S.Clients[PlayerIndex].CurHand[0].Name[1], S.Clients[PlayerIndex].CurHand[1].Name[1], S.Clients[PlayerIndex].CurHand[2].Name[1])
 							S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
 							var Oponent Client
@@ -251,12 +255,12 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 								}
 							}
 
-							var Suit byte
+							var Suit rune 
 							for  _, Card := range(S.Clients[PlayerIndex].CurHand){
 								if Suit == 0{
-									Suit = Card.Name[1]
+									Suit = []rune(Card.Name)[1]
 								}else{
-									if Suit != Card.Name[1]{
+									if Suit != []rune(Card.Name)[1]{
 										Oponent.IpAddress.Write([]byte("Not a Flor"))
 										P1Value = 0
 										break
