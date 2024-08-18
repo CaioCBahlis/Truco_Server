@@ -141,18 +141,22 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						
 					case "Truco":
 						S.BroadCast(fmt.Sprintf("%s PEDIU TRUCO NEWBA", S.Clients[PlayerIndex].Name))
+						var Opponent Client
 						if PlayerIndex == 1{
 							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex-1].IsTurn = true
+							Opponent = S.Clients[PlayerIndex-1]
 						}else{
 							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex+1].IsTurn = true
+							Opponent = S.Clients[PlayerIndex+1]
 						}
 
 						for S.Truco != "y"  && S.Truco != "n"{
 							fmt.Println("Waiting for Newba")
 							time.Sleep(1 * time.Second)
 						}
+						Opponent.IsTurn = false
 
 						if S.Truco == "y"{
 							S.PointsOnWin = 3
@@ -197,6 +201,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							fmt.Println("Waiting for Newba")
 							time.Sleep(2 * time.Second)
 						}
+						Opponent.IsTurn = false
 
 						if S.Envido == "y"{
 							S.BroadCast("Envido Aceito")
@@ -273,21 +278,22 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						if suit1 == suit2 && suit1 == suit3{
 							fmt.Println(S.Clients[PlayerIndex].CurHand[0].Name[1], S.Clients[PlayerIndex].CurHand[1].Name[1], S.Clients[PlayerIndex].CurHand[2].Name[1])
 							S.BroadCast(fmt.Sprintf("%s PEDIU FLOR NEWBA", S.Clients[PlayerIndex].Name))
-							var Oponent Client
+							var Opponent Client
 							if PlayerIndex == 1{
 								S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 								S.Clients[PlayerIndex-1].IsTurn = true
-								Oponent = S.Clients[PlayerIndex-1]
+								Opponent = S.Clients[PlayerIndex-1]
 						}else{
 							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex+1].IsTurn = true
-							Oponent = S.Clients[PlayerIndex+1]
+							Opponent = S.Clients[PlayerIndex+1]
 						}
 
 						for S.Flor != "y" && S.Flor != "n"{
 							fmt.Println("Waiting for Newba")
 							time.Sleep(2 * time.Second)
 						}
+						Opponent.IsTurn = false
 
 						if S.Flor == "y"{
 							
@@ -307,7 +313,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 									Suit = []rune(Card.Name)[1]
 								}else{
 									if Suit != []rune(Card.Name)[1]{
-										Oponent.IpAddress.Write([]byte("Not a Flor"))
+										Opponent.IpAddress.Write([]byte("Not a Flor"))
 										P1Value = 0
 										break
 									}else{
@@ -321,10 +327,10 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							}
 
 							if P1Value > P0Value{
-								Oponent.Points += 6
+								Opponent.Points += 6
 								S.BroadCast("P0 Won")
 							}else if P0Value > P1Value{
-								Oponent.Points += 3
+								Opponent.Points += 3
 								S.BroadCast("P1 Won")
 							}
 
