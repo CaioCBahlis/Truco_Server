@@ -173,9 +173,9 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 								S.Clients[PlayerIndex].Played = true
-								S.Resigned = true
-								S.Truco = ""
+								S.Resigned = true	
 						}
+						S.Truco = ""
 						
 							
 						
@@ -188,7 +188,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							Opponent.IsTurn = true
 							
 						}else{
-							Opponent = &S.Clients[PlayerIndex-1]
+							Opponent = &S.Clients[PlayerIndex+1]
 							Opponent.IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							Opponent.IsTurn = true
 
@@ -260,6 +260,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 						S.Clients[PlayerIndex].Played = true
+						S.Envido = ""
 
 					case "Flor":
 
@@ -334,13 +335,13 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 								}else{
 									S.Clients[PlayerIndex -1].Points += 1
 								}
-								S.Flor = ""
-
+								
 						}
 
 					}else{
 						S.Clients[PlayerIndex].IpAddress.Write([]byte("Not a Flor"))
 					}
+					S.Flor = ""
 
 					case "y":
 						S.Truco = "y"
@@ -388,19 +389,19 @@ func (S *ServerStruct) Start_Game(){
 
 
 	var Gui []string
+
 	for S.Clients[0].Points < 12 && S.Clients[1].Points < 12{
 		S.Round = 1
 		S.Clients[0].RoundsWon = 0
 		S.Clients[1].RoundsWon = 0
-		S.Truco = ""
-		S.Envido = ""
-		S.Flor = ""
+		
 		S.Resigned = false
 		S.PointsOnWin = 1
 		Card := ShuffleHands()
 		CardNum := 0
 
 		for idx := range(len(S.Clients)){
+			S.Clients[PlayingOrder[idx].PlayerIndex].CurHand = []cardpack.Card{}
 			S.Clients[PlayingOrder[idx].PlayerIndex].CurHand = append(S.Clients[PlayingOrder[idx].PlayerIndex].CurHand, Card[CardNum], Card[CardNum+1], Card[CardNum+2])
 	
 			CardNum += 3
