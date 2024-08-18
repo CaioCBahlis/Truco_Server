@@ -141,15 +141,12 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						
 					case "Truco":
 						S.BroadCast(fmt.Sprintf("%s PEDIU TRUCO NEWBA", S.Clients[PlayerIndex].Name))
-						var Opponent Client
 						if PlayerIndex == 1{
 							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex-1].IsTurn = true
-							Opponent = S.Clients[PlayerIndex-1]
 						}else{
 							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex+1].IsTurn = true
-							Opponent = S.Clients[PlayerIndex+1]
 						}
 
 						for S.Truco != "y"  && S.Truco != "n"{
@@ -176,6 +173,8 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 								S.Resigned = true	
 						}
 						S.Truco = ""
+						S.Envido = ""
+						S.Flor = ""
 						
 							
 						
@@ -242,8 +241,11 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 
 								S.BroadCast("Envido Negado")
 								S.Clients[PlayerIndex].Points += 1
-								S.Envido = ""
+								
 						}
+						S.Truco = ""
+						S.Envido = ""
+						S.Flor = ""
 
 					case "Queimar":
 						S.Jogar(PlayerIndex)
@@ -260,7 +262,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 						S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
 						S.Clients[PlayerIndex].Played = true
-						S.Envido = ""
+						
 
 					case "Flor":
 
@@ -334,14 +336,16 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 									S.Clients[PlayerIndex + 1].Points += 1
 								}else{
 									S.Clients[PlayerIndex -1].Points += 1
-								}
-								
+								}	
 						}
 
 					}else{
 						S.Clients[PlayerIndex].IpAddress.Write([]byte("Not a Flor"))
 					}
 					S.Flor = ""
+					S.Truco = ""
+					S.Envido = ""
+						
 
 					case "y":
 						S.Truco = "y"
@@ -397,7 +401,6 @@ func (S *ServerStruct) Start_Game(){
 		S.Truco = ""
 		S.Envido = ""
 		S.Flor = ""
-	
 		S.Resigned = false
 		S.PointsOnWin = 1
 		Card := ShuffleHands()
