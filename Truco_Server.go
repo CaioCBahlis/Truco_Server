@@ -141,12 +141,15 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						
 					case "Truco":
 						S.BroadCast(fmt.Sprintf("%s PEDIU TRUCO NEWBA", S.Clients[PlayerIndex].Name))
+						var Opponent Client
 						if PlayerIndex == 1{
 							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex-1].IsTurn = true
+							Opponent = S.Clients[PlayerIndex-1]
 						}else{
 							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 							S.Clients[PlayerIndex+1].IsTurn = true
+							Opponent = S.Clients[PlayerIndex+1]
 						}
 
 						for S.Truco != "y"  && S.Truco != "n"{
@@ -160,15 +163,12 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 							S.Jogar(PlayerIndex)
 							S.Truco = ""
 									
-						}else if S.Truco== "n"{
+						}else if S.Truco == "n"{
 
 								S.BroadCast("Truco Negado")
 								S.Resigned = true
-								if S.Clients[PlayerIndex].PlayerIndex == 0{
-									S.Clients[PlayerIndex + 1].RoundsWon = 2
-								}else{
-									S.Clients[PlayerIndex -1].RoundsWon = 2
-								}
+								S.Clients[PlayerIndex].RoundsWon = 2
+								
 
 								PlayedCard := cardpack.Card{Name: "Resign", Value: 0, Repr: cardpack.ResignationCard}
 								S.CardsOnTable = append(S.CardsOnTable, PlayedCard)
@@ -233,7 +233,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 									S.Clients[PlayerIndex].Points += 2
 								}else{
 									S.BroadCast(fmt.Sprintf("%s won", S.Clients[PlayerIndex].Name))
-									S.Clients[PlayerIndex].Points += 2
+									Opponent.Points += 2
 								}
 								
 							}
@@ -329,7 +329,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						}
 
 						if S.Flor == "n"{
-							S.BroadCast("Truco Negado")
+							S.BroadCast("Flor Negado")
 								if S.Clients[PlayerIndex].PlayerIndex == 0{
 									S.Clients[PlayerIndex + 1].Points += 1
 								}else{
@@ -394,7 +394,10 @@ func (S *ServerStruct) Start_Game(){
 		S.Round = 1
 		S.Clients[0].RoundsWon = 0
 		S.Clients[1].RoundsWon = 0
-		
+		S.Truco = ""
+		S.Envido = ""
+		S.Flor = ""
+	
 		S.Resigned = false
 		S.PointsOnWin = 1
 		Card := ShuffleHands()
