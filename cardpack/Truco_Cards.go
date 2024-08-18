@@ -44,6 +44,8 @@ var Cards = []string{
     "A♣", "A♥", "2♣", "2♥", "2♦", "2♠", "3♣", "3♥", "3♦", "3♠", "7♥", "7♠", "A♦", "A♠",
 }
 
+var EnvidoValues = map[int]int{1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, 10: 1, 11:1,  12:1, 13:1, 14:1}
+
 
 func CreateTerminalRepr(Card string) []string{
     NewCard := make([]string, len(CardRepr))

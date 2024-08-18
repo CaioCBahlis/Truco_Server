@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"strconv"
+	"sort"
 )
 
 type ServerStruct struct{
@@ -162,6 +163,7 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						}else if S.Truco== "n"{
 
 								S.BroadCast("Truco Negado")
+								S.Resigned = true
 								if S.Clients[PlayerIndex].PlayerIndex == 0{
 									S.Clients[PlayerIndex + 1].RoundsWon = 2
 								}else{
@@ -179,12 +181,17 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						
 					case "Envido":
 						S.BroadCast(fmt.Sprintf("%s PEDIU ENVIDO NEWBA", S.Clients[PlayerIndex].Name))
+						var Opponent *Client
 						if PlayerIndex == 1{
-							S.Clients[PlayerIndex-1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
-							S.Clients[PlayerIndex-1].IsTurn = true
+							Opponent = &S.Clients[PlayerIndex-1]
+							Opponent.IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							Opponent.IsTurn = true
+							
 						}else{
-							S.Clients[PlayerIndex+1].IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
-							S.Clients[PlayerIndex+1].IsTurn = true
+							Opponent = &S.Clients[PlayerIndex-1]
+							Opponent.IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
+							Opponent.IsTurn = true
+
 						}
 
 						for S.Envido != "y" && S.Envido != "n"{
@@ -194,6 +201,42 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 
 						if S.Envido == "y"{
 							S.BroadCast("Envido Aceito")
+							
+							for idx, Client := range(S.Clients){
+								MyCards := Client.CurHand
+								Suits0 := []rune(Client.CurHand[0].Name)[1]
+								Suits1 := []rune(Client.CurHand[1].Name)[1]
+								Suits2 := []rune(Client.CurHand[2].Name)[1]
+
+								var Points [2]int
+								if Suits0 == Suits1 && Suits1 == Suits2{
+									Values := []int{cardpack.EnvidoValues[MyCards[0].Value], cardpack.EnvidoValues[MyCards[1].Value], cardpack.EnvidoValues[MyCards[2].Value]}
+									sort.Ints(Values)
+									Points[idx] = Values[0] + Values[1]
+									
+								}else if Suits0 == Suits1{
+									Points[idx] = cardpack.EnvidoValues[MyCards[0].Value] + cardpack.EnvidoValues[MyCards[1].Value] 
+
+								}else if Suits0 == Suits2{
+									Points[idx] = cardpack.EnvidoValues[MyCards[0].Value] + cardpack.EnvidoValues[MyCards[2].Value] 
+
+								}else if Suits1 == Suits2{
+									Points[idx] = cardpack.EnvidoValues[MyCards[1].Value] + cardpack.EnvidoValues[MyCards[2].Value] 
+								}else{
+									Values := []int{cardpack.EnvidoValues[MyCards[0].Value], cardpack.EnvidoValues[MyCards[1].Value], cardpack.EnvidoValues[MyCards[2].Value]}
+									sort.Ints(Values)
+									Points[idx] = Values[0]
+								}
+
+								if Points[0] > Points[1]{
+									S.BroadCast(fmt.Sprintf("%s won", S.Clients[PlayerIndex].Name))
+									S.Clients[PlayerIndex].Points += 2
+								}else{
+									S.BroadCast(fmt.Sprintf("%s won", S.Clients[PlayerIndex].Name))
+									S.Clients[PlayerIndex].Points += 2
+								}
+								
+							}
 							
 						}else if S.Envido == "n"{
 
@@ -309,7 +352,6 @@ func (S *ServerStruct) ListenToMe(PlayerIndex int){
 						S.Envido = "n"
 						S.Flor = "n"
 						S.Clients[PlayerIndex].IsTurn = false
-						S.Resigned = true
 
 				}
 			}
