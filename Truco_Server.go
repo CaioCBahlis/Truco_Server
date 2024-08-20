@@ -185,7 +185,7 @@ func (G *Game) Start_Game(){
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
 			G.NextGui()
 			G.ClearRound()
-			RoundPlayingOrder = G.PlayRound(InternalOrder)
+			InternalOrder = G.PlayRound(InternalOrder)
 			if G.Teams[0].Resigned || G.Teams[1].Resigned{
 				break
 			}
@@ -512,12 +512,12 @@ func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
 	}
 
 	HighestCard := [][]int{{0,0}}
-	for PlayeriIdx, Card := range(G.CardsOnTable){
+	for PlayerIdx, Card := range(G.CardsOnTable){
 		CardVal := cardpack.Values[Card.Name]
 		if CardVal > HighestCard[0][0]{
-				HighestCard = [][]int{{CardVal,  PlayeriIdx}}
+				HighestCard = [][]int{{CardVal,  PlayerIdx}}
 		}else if CardVal == HighestCard[0][0]{
-				HighestCard = append(HighestCard, []int{CardVal,  PlayeriIdx})
+				HighestCard = append(HighestCard, []int{CardVal,  PlayerIdx})
 			}
 	}
 
@@ -544,6 +544,8 @@ func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
 			
 			WinnerTeam.RoundsWon += WonRound
 	}
+
+	fmt.Println(RoundPlayingOrder)
 	return RoundPlayingOrder
 }
 
