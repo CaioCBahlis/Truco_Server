@@ -32,7 +32,7 @@ type Client struct{
 
 type Team struct{
 	TeamName string
-	TeamPlayers []Player
+	TeamPlayers []*Player
 	TeamPoints int
 	RoundsWon int
 	Resigned bool
@@ -50,7 +50,7 @@ type Player struct{
 
 type Game struct{
 	Teams []Team
-	Players []Player
+	Players []*Player
 	CardsOnTable []cardpack.Card
 	Round int
 	PointsOnWin int
@@ -134,17 +134,17 @@ func GameInit(ServerClients []Client) *Game{
 	NewGame := Game{Round:  0}
 	for _, MyClient := range(ServerClients){
 		NewPlayer := Player{Client: MyClient}
-		NewGame.Players = append(NewGame.Players,  NewPlayer)
+		NewGame.Players = append(NewGame.Players,  &NewPlayer)
 	}
 
 	rand.Shuffle(len(NewGame.Players), func(i, j int)  {NewGame.Players[i], NewGame.Players[j] = NewGame.Players[j], NewGame.Players[i]})
 
 	
 	if len(NewGame.Players) == 4{
-		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0], NewGame.Players[1]}, 
+		Team1 := Team{TeamPlayers: []*Player{NewGame.Players[0],  NewGame.Players[1]}, 
 		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[0].Name, NewGame.Players[1].Name), TeamPoints: 0,}
 		
-		Team2 := Team{TeamPlayers: []Player{NewGame.Players[2], NewGame.Players[3]}, 
+		Team2 := Team{TeamPlayers: []*Player{NewGame.Players[2], NewGame.Players[3]}, 
 		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[2].Name, NewGame.Players[3].Name), TeamPoints: 0}
 
 
@@ -153,10 +153,10 @@ func GameInit(ServerClients []Client) *Game{
 		NewGame.Teams = []Team{Team1, Team2}
 	} else {
 
-		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0]}, 
+		Team1 := Team{TeamPlayers: []*Player{NewGame.Players[0]}, 
 		TeamName: fmt.Sprintf("Team %s", NewGame.Players[0].Name), TeamPoints: 0}
 
-		Team2 := Team{TeamPlayers: []Player{NewGame.Players[1]}, 
+		Team2 := Team{TeamPlayers: []*Player{NewGame.Players[1]}, 
 		TeamName: fmt.Sprintf("Team %s", NewGame.Players[1].Name), TeamPoints: 0}
 
 
@@ -242,37 +242,37 @@ func (G *Game) BroadCast(message string){
 	}
 }
 
-func (G *Game) ListenToMe(MyClient Player){
+func (G *Game) ListenToMe(MyPlayer *Player){
 	mybuff := make([]byte, 1024)
 
 	for{
-		n, _ := MyClient.IpAddress.Read(mybuff)
+		n, _ := MyPlayer.IpAddress.Read(mybuff)
 		Message := string(mybuff[:n])
 		FormattedMessage := strings.ToLower(Message)
 
-		if !MyClient.IsTurn{
+		if !MyPlayer.IsTurn{
 			if n > 0 {
-				G.BroadCast(MyClient.Name + ": " + Message)
+				G.BroadCast(MyPlayer.Name + ": " + Message)
 			}
 
-		}else if MyClient.IsTurn{
+		}else if MyPlayer.IsTurn{
 			switch FormattedMessage{
 				case "jogar":
-					CardIndex := G.Jogar(MyClient)
+					CardIndex := G.Jogar(MyPlayer)
 
-					PlayedCard := MyClient.CurHand[CardIndex]
-					MyClient.CurHand = append(MyClient.CurHand[:CardIndex], MyClient.CurHand[CardIndex+1:]...)
+					PlayedCard := MyPlayer.CurHand[CardIndex]
+					MyPlayer.CurHand = append(MyPlayer.CurHand[:CardIndex], MyPlayer.CurHand[CardIndex+1:]...)
 					G.CardsOnTable = append(G.CardsOnTable, PlayedCard)
-					MyClient.Played = true
+					MyPlayer.Played = true
 
 
 				case "truco":
-					OpponentTeam := G.Challenge(FormattedMessage, MyClient)
+					OpponentTeam := G.Challenge(FormattedMessage, MyPlayer)
 
 					if OpponentTeam.Accepted == "y"{
 						G.PointsOnWin = 3
 						G.BroadCast("Truco Aceito, A rodada Vale 3 Pontos")
-						G.Jogar(MyClient)
+						G.Jogar(MyPlayer)
 
 					}else{
 						G.BroadCast("Truco Negado")
@@ -281,10 +281,10 @@ func (G *Game) ListenToMe(MyClient Player){
 
 					OpponentTeam.Challenged = false
 					OpponentTeam.Accepted = ""
-					MyClient.Played = true
+					MyPlayer.Played = true
 
 				case "envido":
-					OpponentTeam := G.Challenge(FormattedMessage, MyClient)
+					OpponentTeam := G.Challenge(FormattedMessage, MyPlayer)
 
 					if OpponentTeam.Accepted == "y"{
 						G.BroadCast("Envido Aceito")
@@ -292,24 +292,24 @@ func (G *Game) ListenToMe(MyClient Player){
 
 					}else{
 						G.BroadCast("Envido Negado")
-						MyClient.MyTeam.TeamPoints += 1
+						MyPlayer.MyTeam.TeamPoints += 1
 					}
 
 					OpponentTeam.Challenged = false
 					OpponentTeam.Accepted = ""
 
 				case "queimar":
-					G.Jogar(MyClient)
+					G.Jogar(MyPlayer)
 					G.CardsOnTable[len(G.CardsOnTable)-1] = cardpack.Card{Name: "Queimar", Value: 0, Repr: cardpack.QueimadoCard}
-					MyClient.Played = true
+					MyPlayer.Played = true
 
 				case "correr":
-					G.BroadCast(MyClient.MyTeam.TeamName + "Resigned")
-					MyClient.MyTeam.Resigned = true
-					MyClient.Played = true
+					G.BroadCast(MyPlayer.MyTeam.TeamName + "Resigned")
+					MyPlayer.MyTeam.Resigned = true
+					MyPlayer.Played = true
 
 				case "flor":
-					Opponent := G.Flor(MyClient)
+					Opponent := G.Flor(MyPlayer)
 					Opponent.Accepted = ""
 					Opponent.Challenged = false
 			}
@@ -317,7 +317,7 @@ func (G *Game) ListenToMe(MyClient Player){
 	}
 }
 
-func (G *Game) Challenge(Challenge string, Challenger Player) Team{
+func (G *Game) Challenge(Challenge string, Challenger *Player) Team{
 
 	G.BroadCast(fmt.Sprintf("%s PEDIU %s NEWBA", Challenger.Name, Challenge))
 	var OpponentTeam Team
@@ -337,7 +337,7 @@ func (G *Game) Challenge(Challenge string, Challenger Player) Team{
 
 }
 
-func (G *Game) Jogar(MyClient Player) int{
+func (G *Game) Jogar(MyClient *Player) int{
 	CardBuff := make([]byte, 1024)
 	MyClient.IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
 
@@ -395,7 +395,7 @@ func (G *Game) Envido(){
 	G.BroadCast(Winner.MyTeam.TeamName + "Won")
 }
 
-func (G *Game) Flor(MyPlayer Player) Team{
+func (G *Game) Flor(MyPlayer *Player) Team{
 	MyHand := MyPlayer.CurHand
 	suit1 := []rune(MyHand[0].Name)[1]
 	suit2 := []rune(MyHand[1].Name)[1]
@@ -475,7 +475,7 @@ func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
 
 		for !CurPlayer.Played{
 			time.Sleep(5 * time.Second)
-			G.BroadCast(fmt.Sprintf("\n Waiting For %s", CurPlayer.Name))
+			//G.BroadCast(fmt.Sprintf("\n Waiting For %s", CurPlayer.Name))
 		}
 
 
@@ -564,10 +564,10 @@ func (G * Game) PlayingOrder(PlayerCount int) ([]*Player, []string){
 
 	switch PlayerCount{
 		case 2:
-			RoundPlayingOrder = []*Player{&G.Teams[0].TeamPlayers[0], &G.Teams[1].TeamPlayers[0]}
+			RoundPlayingOrder = []*Player{G.Teams[0].TeamPlayers[0], G.Teams[1].TeamPlayers[0]}
 			RoundNameOrder = []string{G.Teams[0].TeamPlayers[0].Name, G.Teams[1].TeamPlayers[0].Name}
 		case 4:
-			RoundPlayingOrder = []*Player{&G.Teams[0].TeamPlayers[0], &G.Teams[1].TeamPlayers[0], &G.Teams[0].TeamPlayers[1], &G.Teams[1].TeamPlayers[1]}
+			RoundPlayingOrder = []*Player{G.Teams[0].TeamPlayers[0], G.Teams[1].TeamPlayers[0], G.Teams[0].TeamPlayers[1], G.Teams[1].TeamPlayers[1]}
 			RoundNameOrder = []string{G.Teams[0].TeamPlayers[0].Name, G.Teams[1].TeamPlayers[0].Name, G.Teams[0].TeamPlayers[1].Name, G.Teams[1].TeamPlayers[1].Name}
 		}
 
