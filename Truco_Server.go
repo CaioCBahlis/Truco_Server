@@ -518,7 +518,7 @@ func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
 				HighestCard = [][]int{{CardVal,  PlayerIdx}}
 		}else if CardVal == HighestCard[0][0]{
 				HighestCard = append(HighestCard, []int{CardVal,  PlayerIdx})
-			}
+		}
 	}
 
 	WinnerIndex := HighestCard[0][1]
@@ -542,7 +542,7 @@ func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
 			}
 		}	
 			
-			WinnerTeam.RoundsWon += WonRound
+		WinnerTeam.RoundsWon += WonRound
 	}
 
 	fmt.Println(RoundPlayingOrder)
