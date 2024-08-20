@@ -183,8 +183,10 @@ func (G *Game) Start_Game(){
 		G.DealCards(Cards)
 
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
+			fmt.Println(RoundPlayingOrder)
 			G.NextGui()
 			G.ClearRound()
+			fmt.Println(InternalOrder)
 			InternalOrder = G.PlayRound(InternalOrder)
 			if G.Teams[0].Resigned || G.Teams[1].Resigned{
 				break
@@ -217,6 +219,7 @@ func (G *Game) Start_Game(){
 				G.BroadCast("Draw")
 			}
 		}
+
 		RoundPlayingOrder = append(RoundPlayingOrder[1:], RoundPlayingOrder[0])
 	}
 
@@ -228,6 +231,70 @@ func (G *Game) Start_Game(){
 
 	G.BroadCast("Thank You For Playing")
 	
+}
+
+func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
+
+	for _, CurPlayer := range(RoundPlayingOrder){
+		CurPlayer.IsTurn = true
+		G.BroadCast(CurPlayer.Name + "'s Turn")
+		CurPlayer.IpAddress.Write([]byte("\n" + "It's Your Turn!"))
+		
+
+		for !CurPlayer.Played{
+			time.Sleep(5 * time.Second)
+			//G.BroadCast(fmt.Sprintf("\n Waiting For %s", CurPlayer.Name))
+		}
+
+
+		if CurPlayer.MyTeam.Resigned{
+			G.BroadCast(CurPlayer.MyTeam.TeamName + "Has Resigned")
+			return nil
+		}else{
+			G.BroadCast(CurPlayer.Name + "Has Played: ")
+			PlayedCard := cardpack.CreateTerminalRepr(G.CardsOnTable[len(G.CardsOnTable)-1].Name)
+			for line := range(7){
+				G.BroadCast(PlayedCard[line])
+			}
+		}
+	}
+
+	HighestCard := [][]int{{0,0}}
+	for PlayerIdx, Card := range(G.CardsOnTable){
+		CardVal := cardpack.Values[Card.Name]
+		if CardVal > HighestCard[0][0]{
+				HighestCard = [][]int{{CardVal,  PlayerIdx}}
+		}else if CardVal == HighestCard[0][0]{
+				HighestCard = append(HighestCard, []int{CardVal,  PlayerIdx})
+		}
+	}
+
+	WinnerIndex := HighestCard[0][1]
+	WinnerPlayer := RoundPlayingOrder[WinnerIndex]
+	WinnerTeam := WinnerPlayer.MyTeam
+
+	if len(HighestCard) == 1{
+		G.BroadCast(WinnerPlayer.Name + " Won The Round")
+		RoundPlayingOrder = append(RoundPlayingOrder[WinnerIndex:], RoundPlayingOrder[:WinnerIndex]...)
+		WinnerTeam.RoundsWon += 1
+	}else{
+		var WonRound int
+		for _, CardValues := range(HighestCard){
+			WonRound = 1
+			Player := CardValues[1]
+			RoundPlayingOrder = append(RoundPlayingOrder[WinnerIndex:], RoundPlayingOrder[:WinnerIndex]...)
+			if RoundPlayingOrder[Player].MyTeam != WinnerTeam{
+				G.BroadCast("Draw")
+				WonRound = 0
+				break
+			}
+		}	
+			
+		WinnerTeam.RoundsWon += WonRound
+	}
+
+	fmt.Println(RoundPlayingOrder)
+	return RoundPlayingOrder
 }
 
 
@@ -384,7 +451,7 @@ func (G *Game) Envido(){
 		Suits1 := []rune(MyCards[1].Name)[1]
 		Suits2 := []rune(MyCards[2].Name)[1]
 		
-		MyPoints := []int{}
+		var MyPoints []int
 		if Suits0 == Suits1 && Suits1 == Suits2{
 			Values := []int{cardpack.EnvidoValues[MyCards[0].Value], cardpack.EnvidoValues[MyCards[1].Value], cardpack.EnvidoValues[MyCards[2].Value]}
 			sort.Ints(Values)
@@ -475,9 +542,9 @@ func (G *Game) Flor(MyPlayer *Player) Team{
 
 func (G  *Game) MatchINIT(RoundNameOrder []string){
 	G.ClearGameVariables()
-	G.BroadCast("Round: " + string(G.Round))
-	G.BroadCast(G.Teams[0].TeamName + ": " + string(G.Teams[0].TeamPoints))
-	G.BroadCast(G.Teams[1].TeamName + ": " +  string(G.Teams[1].TeamPoints))
+	G.BroadCast("Round: " + strconv.Itoa(G.Round))
+	G.BroadCast(G.Teams[0].TeamName + ": " + strconv.Itoa(G.Teams[0].TeamPoints))
+	G.BroadCast(G.Teams[1].TeamName + ": " +  strconv.Itoa(G.Teams[1].TeamPoints))
 	G.BroadCast("Round Order: " + strings.Join(RoundNameOrder, ","))
 
 	for _, Players := range(G.Players){
@@ -485,69 +552,6 @@ func (G  *Game) MatchINIT(RoundNameOrder []string){
 	}
 }
 
-func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
-
-	for _, CurPlayer := range(RoundPlayingOrder){
-		CurPlayer.IsTurn = true
-		G.BroadCast(CurPlayer.Name + "'s Turn")
-		CurPlayer.IpAddress.Write([]byte("\n" + "It's Your Turn!"))
-		
-
-		for !CurPlayer.Played{
-			time.Sleep(5 * time.Second)
-			//G.BroadCast(fmt.Sprintf("\n Waiting For %s", CurPlayer.Name))
-		}
-
-
-		if CurPlayer.MyTeam.Resigned{
-			G.BroadCast(CurPlayer.MyTeam.TeamName + "Has Resigned")
-			return nil
-		}else{
-			G.BroadCast(CurPlayer.Name + "Has Played: ")
-			PlayedCard := cardpack.CreateTerminalRepr(G.CardsOnTable[len(G.CardsOnTable)-1].Name)
-			for line := range(7){
-				G.BroadCast(PlayedCard[line])
-			}
-		}
-	}
-
-	HighestCard := [][]int{{0,0}}
-	for PlayerIdx, Card := range(G.CardsOnTable){
-		CardVal := cardpack.Values[Card.Name]
-		if CardVal > HighestCard[0][0]{
-				HighestCard = [][]int{{CardVal,  PlayerIdx}}
-		}else if CardVal == HighestCard[0][0]{
-				HighestCard = append(HighestCard, []int{CardVal,  PlayerIdx})
-		}
-	}
-
-	WinnerIndex := HighestCard[0][1]
-	WinnerPlayer := RoundPlayingOrder[WinnerIndex]
-	WinnerTeam := WinnerPlayer.MyTeam
-
-	if len(HighestCard) == 1{
-		G.BroadCast(WinnerPlayer.Name + " Won The Round")
-		RoundPlayingOrder = append(RoundPlayingOrder[WinnerIndex:], RoundPlayingOrder[:WinnerIndex]...)
-		WinnerTeam.RoundsWon += 1
-	}else{
-		var WonRound int
-		for _, CardValues := range(HighestCard){
-			WonRound = 1
-			Player := CardValues[1]
-			RoundPlayingOrder = append(RoundPlayingOrder[WinnerIndex:], RoundPlayingOrder[:WinnerIndex]...)
-			if RoundPlayingOrder[Player].MyTeam != WinnerTeam{
-				G.BroadCast("Draw")
-				WonRound = 0
-				break
-			}
-		}	
-			
-		WinnerTeam.RoundsWon += WonRound
-	}
-
-	fmt.Println(RoundPlayingOrder)
-	return RoundPlayingOrder
-}
 
 func (G * Game) ShuffleDeck() []cardpack.Card{
 
