@@ -88,7 +88,7 @@ func main(){
 		if len(MyServer.Clients) == 1{
 			MyServer.Clients[0].IpAddress.Write([]byte("How many players? (2 or 4)"))
 			sz, _ := MyServer.Clients[0].IpAddress.Read(HostResponse)
-			Response = string(HostResponse[:sz])
+			Response = strings.TrimSpace(string(HostResponse[:sz]))
 
 			for Response != "2" && Response != "4"{
 				MyServer.Clients[0].IpAddress.Write([]byte("Invalid Number of Players"))
@@ -129,6 +129,68 @@ func main(){
 		NewGame := GameInit(MyServer.Clients)
 		NewGame.Start_Game()
 }
+
+func (G *Game) Start_Game(){
+	RoundPlayingOrder, RoundNameOrder := G.PlayingOrder(len(G.Players))
+	InternalOrder := make([]Player, len(RoundPlayingOrder))
+	copy(RoundPlayingOrder, InternalOrder)
+	G.BroadCast("The Teams are")
+	G.BroadCast(G.Teams[0].TeamName + " x " + G.Teams[1].TeamName)
+
+	
+	for G.Teams[0].TeamPoints < MAXPOINTS && G.Teams[1].TeamPoints < MAXPOINTS{
+		G.MatchINIT(RoundNameOrder)
+		Cards := G.ShuffleDeck()
+		G.DealCards(Cards)
+
+		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
+			G.ClearRound()
+			fmt.Println(InternalOrder, len(InternalOrder), len(G.Players))
+			RoundPlayingOrder = G.PlayRound(InternalOrder)
+			if G.Teams[0].Resigned || G.Teams[1].Resigned{
+				break
+			}
+		}
+
+		
+		if G.Teams[0].Resigned{
+
+			G.Teams[1].TeamPoints += G.PointsOnWin
+			G.BroadCast(G.Teams[1].TeamName + " Won the Game")
+
+		}else if G.Teams[1].Resigned{
+
+			G.Teams[0].TeamPoints += G.PointsOnWin
+			G.BroadCast(G.Teams[0].TeamName + " Won the Game")
+
+		}else{
+			if G.Teams[0].RoundsWon > G.Teams[1].RoundsWon{
+
+				G.BroadCast(G.Teams[0].TeamName + " Won the Game")
+				G.Teams[0].TeamPoints += G.PointsOnWin
+
+			}else if G.Teams[0].RoundsWon < G.Teams[1].RoundsWon{
+
+				G.BroadCast(G.Teams[1].TeamName + " Won the Game")
+				G.Teams[1].TeamPoints += G.PointsOnWin
+
+			}else{
+				G.BroadCast("Draw")
+			}
+		}
+		RoundPlayingOrder = append(RoundPlayingOrder[1:], RoundPlayingOrder[0])
+	}
+
+	if G.Teams[0].TeamPoints > G.Teams[1].TeamPoints{
+		G.BroadCast(G.Teams[0].TeamName + " Won the Match")
+	}else{
+		G.BroadCast(G.Teams[1].TeamName + " Won The Match")
+	}
+
+	G.BroadCast("Thank You For Playing")
+	
+}
+
 
 func (S *ServerStruct) BroadCast(message string){
 	for _, Client := range(S.Clients){
@@ -352,8 +414,6 @@ func (G *Game) Flor(MyPlayer Player) Team{
 	return OpponentTeam
 }
 
-
-
 func GameInit(ServerClients []Client) *Game{
 	NewGame := Game{Round:  0}
 	for _, MyClient := range(ServerClients){
@@ -366,10 +426,10 @@ func GameInit(ServerClients []Client) *Game{
 	
 	if len(NewGame.Players) == 4{
 		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0], NewGame.Players[1]}, 
-		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[0].Name, NewGame.Players[1].Name)}
+		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[0].Name, NewGame.Players[1].Name), TeamPoints: 0,}
 		
 		Team2 := Team{TeamPlayers: []Player{NewGame.Players[2], NewGame.Players[3]}, 
-		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[2].Name, NewGame.Players[3].Name)}
+		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[2].Name, NewGame.Players[3].Name), TeamPoints: 0}
 
 
 		NewGame.Players[0].MyTeam, NewGame.Players[1].MyTeam = &Team1,&Team1
@@ -378,10 +438,10 @@ func GameInit(ServerClients []Client) *Game{
 	} else {
 
 		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0]}, 
-		TeamName: fmt.Sprintf("Team %s", NewGame.Players[0].Name)}
+		TeamName: fmt.Sprintf("Team %s", NewGame.Players[0].Name), TeamPoints: 0}
 
 		Team2 := Team{TeamPlayers: []Player{NewGame.Players[1]}, 
-		TeamName: fmt.Sprintf("Team %s", NewGame.Players[1].Name)}
+		TeamName: fmt.Sprintf("Team %s", NewGame.Players[1].Name), TeamPoints: 0}
 
 
 		NewGame.Players[0].MyTeam = &Team1
@@ -391,66 +451,6 @@ func GameInit(ServerClients []Client) *Game{
 
 	return &NewGame
 
-}
-
-func (G *Game) Start_Game(){
-	RoundPlayingOrder, RoundNameOrder := G.PlayingOrder(len(G.Players))
-	var InternalOrder []Player
-	copy(RoundPlayingOrder, InternalOrder)
-	G.BroadCast("The Teams are")
-	G.BroadCast(G.Teams[0].TeamName + " x " + G.Teams[1].TeamName)
-
-	
-	for G.Teams[0].TeamPoints < MAXPOINTS && G.Teams[1].TeamPoints < MAXPOINTS{
-		G.MatchINIT(RoundNameOrder)
-		Cards := G.ShuffleDeck()
-		G.DealCards(Cards)
-
-		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
-			G.ClearRound()
-			RoundPlayingOrder = G.PlayRound(InternalOrder)
-			if G.Teams[0].Resigned || G.Teams[1].Resigned{
-				break
-			}
-		}
-
-		
-		if G.Teams[0].Resigned{
-
-			G.Teams[1].TeamPoints += G.PointsOnWin
-			G.BroadCast(G.Teams[1].TeamName + " Won the Game")
-
-		}else if G.Teams[1].Resigned{
-
-			G.Teams[0].TeamPoints += G.PointsOnWin
-			G.BroadCast(G.Teams[0].TeamName + " Won the Game")
-
-		}else{
-			if G.Teams[0].RoundsWon > G.Teams[1].RoundsWon{
-
-				G.BroadCast(G.Teams[0].TeamName + " Won the Game")
-				G.Teams[0].TeamPoints += G.PointsOnWin
-
-			}else if G.Teams[0].RoundsWon < G.Teams[1].RoundsWon{
-
-				G.BroadCast(G.Teams[1].TeamName + " Won the Game")
-				G.Teams[1].TeamPoints += G.PointsOnWin
-
-			}else{
-				G.BroadCast("Draw")
-			}
-		}
-		RoundPlayingOrder = append(RoundPlayingOrder[1:], RoundPlayingOrder[0])
-	}
-
-	if G.Teams[0].TeamPoints > G.Teams[1].TeamPoints{
-		G.BroadCast(G.Teams[0].TeamName + " Won the Match")
-	}else{
-		G.BroadCast(G.Teams[1].TeamName + " Won The Match")
-	}
-
-	G.BroadCast("Thank You For Playing")
-	
 }
 
 func (G  *Game) MatchINIT(RoundNameOrder []string){
@@ -562,6 +562,7 @@ func (G * Game) PlayingOrder(PlayerCount int) ([]Player, []string){
 	var RoundPlayingOrder []Player
 	var RoundNameOrder []string
 
+	fmt.Println(PlayerCount)
 	switch PlayerCount{
 		case 2:
 			RoundPlayingOrder = []Player{G.Teams[0].TeamPlayers[0], G.Teams[1].TeamPlayers[0]}
