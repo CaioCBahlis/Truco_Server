@@ -172,12 +172,12 @@ func GameInit(ServerClients []Client) *Game{
 func (G *Game) Start_Game(){
 	RoundPlayingOrder, RoundNameOrder := G.PlayingOrder(len(G.Players))
 	InternalOrder := make([]*Player, len(RoundPlayingOrder))
-	copy(InternalOrder, RoundPlayingOrder)
 	G.BroadCast("The Teams are")
 	G.BroadCast(G.Teams[0].TeamName + " x " + G.Teams[1].TeamName)
 
 	
 	for G.Teams[0].TeamPoints < MAXPOINTS && G.Teams[1].TeamPoints < MAXPOINTS{
+		copy(InternalOrder, RoundPlayingOrder)
 		G.MatchINIT(RoundNameOrder)
 		Cards := G.ShuffleDeck()
 		G.DealCards(Cards)
