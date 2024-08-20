@@ -43,7 +43,7 @@ type Team struct{
 type Player struct{
 	Client
 	MyTeam *Team
-	CurHand []cardpack.Card
+	CurHand []*cardpack.Card
 	IsTurn bool
 	Played bool
 }
@@ -279,7 +279,7 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 
 					PlayedCard := MyPlayer.CurHand[CardIndex]
 					MyPlayer.CurHand = append(MyPlayer.CurHand[:CardIndex], MyPlayer.CurHand[CardIndex+1:]...)
-					G.CardsOnTable = append(G.CardsOnTable, PlayedCard)
+					G.CardsOnTable = append(G.CardsOnTable, *PlayedCard)
 					MyPlayer.Played = true
 
 
@@ -566,7 +566,7 @@ func (G * Game) ShuffleDeck() []cardpack.Card{
 func (G *Game) DealCards(Cards []cardpack.Card){
 	
 	for _, Player := range(G.Players){
-		Player.CurHand = append(Player.CurHand, Cards[0], Cards[1], Cards[2])
+		Player.CurHand = append(Player.CurHand, &Cards[0], &Cards[1], &Cards[2])
 		Cards = Cards[3:]
 	}
 

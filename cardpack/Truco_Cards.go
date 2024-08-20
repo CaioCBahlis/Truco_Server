@@ -154,7 +154,7 @@ var SingleUI = []string{
 
 }
 
-func UpdateGui(Round int, CurHand []Card) []string{
+func UpdateGui(Round int, CurHand []*Card) []string{
     NewUi := make([]string, len(TripleUI))
     switch Round{
         case 1:
