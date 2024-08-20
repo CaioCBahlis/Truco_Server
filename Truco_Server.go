@@ -604,12 +604,23 @@ func (G * Game) PlayingOrder(PlayerCount int) ([]*Player, []string){
 func (G *Game) ClearGameVariables(){
 	G.PointsOnWin = 1
 	G.Round = 1
-	G.CardsOnTable = []cardpack.Card{}
+
+	for _, Client := range(G.Players){
+		Client.IsTurn = false
+		Client.Played = false
+		Client.MyTeam.Accepted = ""
+		Client.MyTeam.Resigned = false
+		Client.MyTeam.Challenged = false
+		Client.MyTeam.RoundsWon = 0
+		
+	}
+
 }
 
 func (G *Game) ClearRound(){
 	G.PointsOnWin = 1
 	G.Round += 1
+	G.CardsOnTable = []cardpack.Card{}
 	
 	for _, Client := range(G.Players){
 		Client.IsTurn = false
