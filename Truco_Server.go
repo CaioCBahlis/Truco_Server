@@ -172,17 +172,18 @@ func GameInit(ServerClients []Client) *Game{
 func (G *Game) Start_Game(){
 	G.StartComms()
 	RoundPlayingOrder, RoundNameOrder := G.PlayingOrder(len(G.Players))
-	InternalOrder := make([]*Player, len(RoundPlayingOrder))
 	G.BroadCast("The Teams are")
 	G.BroadCast(G.Teams[0].TeamName + " x " + G.Teams[1].TeamName)
-	fmt.Println(RoundPlayingOrder)
+	
 
 	
 	for G.Teams[0].TeamPoints < MAXPOINTS && G.Teams[1].TeamPoints < MAXPOINTS{
+		InternalOrder := make([]*Player, len(RoundPlayingOrder))
 		copy(InternalOrder, RoundPlayingOrder)
 		G.MatchINIT(RoundNameOrder)
 		Cards := G.ShuffleDeck()
 		G.DealCards(Cards)
+		fmt.Println()
 
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
 			G.NextGui()
@@ -383,8 +384,11 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 					OpponentTeam.Accepted = ""
 
 				case "queimar":
-					G.Jogar(MyPlayer)
-					G.CardsOnTable[len(G.CardsOnTable)-1] = cardpack.Card{Name: "Queimar", Value: 0, Repr: cardpack.QueimadoCard}
+					CardIndex := G.Jogar(MyPlayer)
+
+					PlayedCard := cardpack.Card{Name: "Queimar", Value: 0, Repr: cardpack.QueimadoCard}
+					MyPlayer.CurHand = append(MyPlayer.CurHand[:CardIndex], MyPlayer.CurHand[CardIndex+1:]...)
+					G.CardsOnTable = append(G.CardsOnTable, PlayedCard)
 					MyPlayer.Played = true
 
 				case "correr":
@@ -401,14 +405,14 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 	}
 }
 
-func (G *Game) Challenge(Challenge string, Challenger *Player) Team{
+func (G *Game) Challenge(Challenge string, Challenger *Player) *Team{
 
 	G.BroadCast(fmt.Sprintf("%s PEDIU %s NEWBA", Challenger.Name, Challenge))
-	var OpponentTeam Team
+	var OpponentTeam *Team
 	if Challenger.MyTeam == G.Teams[0]{
-		OpponentTeam = *G.Teams[1]
+		OpponentTeam = G.Teams[1]
 	}else{ 							  
-		OpponentTeam = *G.Teams[0]
+		OpponentTeam = G.Teams[0]
 	}
 				
 	OpponentTeam.Challenged = true
@@ -482,13 +486,13 @@ func (G *Game) Envido(){
 	G.BroadCast(Winner.MyTeam.TeamName + "Won")
 }
 
-func (G *Game) Flor(MyPlayer *Player) Team{
+func (G *Game) Flor(MyPlayer *Player) *Team{
 	MyHand := MyPlayer.CurHand
 	suit1 := []rune(MyHand[0].Name)[1]
 	suit2 := []rune(MyHand[1].Name)[1]
 	suit3 := []rune(MyHand[2].Name)[1]
 
-	var OpponentTeam Team
+	var OpponentTeam *Team
 	if suit1 == suit2 && suit1 == suit3{
 		OpponentTeam = G.Challenge("flor", MyPlayer)
 	}else{
