@@ -170,10 +170,12 @@ func GameInit(ServerClients []Client) *Game{
 }
 
 func (G *Game) Start_Game(){
+	G.StartComms()
 	RoundPlayingOrder, RoundNameOrder := G.PlayingOrder(len(G.Players))
 	InternalOrder := make([]*Player, len(RoundPlayingOrder))
 	G.BroadCast("The Teams are")
 	G.BroadCast(G.Teams[0].TeamName + " x " + G.Teams[1].TeamName)
+	fmt.Println(RoundPlayingOrder)
 
 	
 	for G.Teams[0].TeamPoints < MAXPOINTS && G.Teams[1].TeamPoints < MAXPOINTS{
@@ -183,11 +185,9 @@ func (G *Game) Start_Game(){
 		G.DealCards(Cards)
 
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
-			fmt.Println(RoundPlayingOrder)
 			G.NextGui()
-			G.ClearRound()
-			fmt.Println(InternalOrder)
 			InternalOrder = G.PlayRound(InternalOrder)
+			G.ClearRound()
 			if G.Teams[0].Resigned || G.Teams[1].Resigned{
 				break
 			}
@@ -547,9 +547,6 @@ func (G  *Game) MatchINIT(RoundNameOrder []string){
 	G.BroadCast(G.Teams[1].TeamName + ": " +  strconv.Itoa(G.Teams[1].TeamPoints))
 	G.BroadCast("Round Order: " + strings.Join(RoundNameOrder, ","))
 
-	for _, Players := range(G.Players){
-		go G.ListenToMe(Players)
-	}
 }
 
 
@@ -633,4 +630,8 @@ func (G *Game) ClearRound(){
 }
 
 
-
+func (G *Game) StartComms(){
+	for _, Player := range(G.Players){
+		go G.ListenToMe(Player)
+	}
+}
