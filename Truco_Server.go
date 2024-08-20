@@ -357,7 +357,11 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 					if OpponentTeam.Accepted == "y"{
 						G.PointsOnWin = 3
 						G.BroadCast("Truco Aceito, A rodada Vale 3 Pontos")
-						G.Jogar(MyPlayer)
+						CardIndex := G.Jogar(MyPlayer)
+
+						PlayedCard := MyPlayer.CurHand[CardIndex]
+						MyPlayer.CurHand = append(MyPlayer.CurHand[:CardIndex], MyPlayer.CurHand[CardIndex+1:]...)
+						G.CardsOnTable = append(G.CardsOnTable, *PlayedCard)
 
 					}else{
 						G.BroadCast("Truco Negado")
