@@ -185,7 +185,7 @@ func (G *Game) Start_Game(){
 		G.DealCards(Cards)
 		fmt.Println()
 
-		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
+		for G.Round <= NROUNDS && (G.Teams[0].RoundsWon < MAXWONROUND || G.Teams[0].RoundsWon != G.Teams[1].RoundsWon) && (G.Teams[1].RoundsWon < MAXWONROUND  || G.Teams[0].RoundsWon != G.Teams[1].RoundsWon ){
 			G.NextGui()
 			InternalOrder = G.PlayRound(InternalOrder)
 			G.ClearRound()
