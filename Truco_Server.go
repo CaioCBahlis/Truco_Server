@@ -130,10 +130,49 @@ func main(){
 		NewGame.Start_Game()
 }
 
+func GameInit(ServerClients []Client) *Game{
+	NewGame := Game{Round:  0}
+	for _, MyClient := range(ServerClients){
+		NewPlayer := Player{Client: MyClient}
+		NewGame.Players = append(NewGame.Players,  NewPlayer)
+	}
+
+	rand.Shuffle(len(NewGame.Players), func(i, j int)  {NewGame.Players[i], NewGame.Players[j] = NewGame.Players[j], NewGame.Players[i]})
+
+	
+	if len(NewGame.Players) == 4{
+		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0], NewGame.Players[1]}, 
+		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[0].Name, NewGame.Players[1].Name), TeamPoints: 0,}
+		
+		Team2 := Team{TeamPlayers: []Player{NewGame.Players[2], NewGame.Players[3]}, 
+		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[2].Name, NewGame.Players[3].Name), TeamPoints: 0}
+
+
+		NewGame.Players[0].MyTeam, NewGame.Players[1].MyTeam = &Team1,&Team1
+		NewGame.Players[2].MyTeam, NewGame.Players[3].MyTeam = &Team2,&Team2
+		NewGame.Teams = []Team{Team1, Team2}
+	} else {
+
+		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0]}, 
+		TeamName: fmt.Sprintf("Team %s", NewGame.Players[0].Name), TeamPoints: 0}
+
+		Team2 := Team{TeamPlayers: []Player{NewGame.Players[1]}, 
+		TeamName: fmt.Sprintf("Team %s", NewGame.Players[1].Name), TeamPoints: 0}
+
+
+		NewGame.Players[0].MyTeam = &Team1
+		NewGame.Players[1].MyTeam = &Team2
+		NewGame.Teams = []Team{Team1, Team2}
+	}
+
+	return &NewGame
+
+}
+
 func (G *Game) Start_Game(){
 	RoundPlayingOrder, RoundNameOrder := G.PlayingOrder(len(G.Players))
-	InternalOrder := make([]Player, len(RoundPlayingOrder))
-	copy(RoundPlayingOrder, InternalOrder)
+	InternalOrder := make([]*Player, len(RoundPlayingOrder))
+	copy(InternalOrder, RoundPlayingOrder)
 	G.BroadCast("The Teams are")
 	G.BroadCast(G.Teams[0].TeamName + " x " + G.Teams[1].TeamName)
 
@@ -145,7 +184,6 @@ func (G *Game) Start_Game(){
 
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
 			G.ClearRound()
-			fmt.Println(InternalOrder, len(InternalOrder), len(G.Players))
 			RoundPlayingOrder = G.PlayRound(InternalOrder)
 			if G.Teams[0].Resigned || G.Teams[1].Resigned{
 				break
@@ -291,8 +329,8 @@ func (G *Game) Challenge(Challenge string, Challenger Player) Team{
 		Player.IpAddress.Write([]byte("VAI ACEITAR (y/n)"))
 	}
 
+	G.BroadCast("Waiting for " + OpponentTeam.TeamName)
 	for OpponentTeam.Accepted != "y" && OpponentTeam.Accepted != "n"{
-		G.BroadCast("Waiting for " + OpponentTeam.TeamName)
 		time.Sleep(1 * time.Second)
 	}
 	return OpponentTeam
@@ -414,44 +452,6 @@ func (G *Game) Flor(MyPlayer Player) Team{
 	return OpponentTeam
 }
 
-func GameInit(ServerClients []Client) *Game{
-	NewGame := Game{Round:  0}
-	for _, MyClient := range(ServerClients){
-		NewPlayer := Player{Client: MyClient}
-		NewGame.Players = append(NewGame.Players,  NewPlayer)
-	}
-
-	rand.Shuffle(len(NewGame.Players), func(i, j int)  {NewGame.Players[i], NewGame.Players[j] = NewGame.Players[j], NewGame.Players[i]})
-
-	
-	if len(NewGame.Players) == 4{
-		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0], NewGame.Players[1]}, 
-		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[0].Name, NewGame.Players[1].Name), TeamPoints: 0,}
-		
-		Team2 := Team{TeamPlayers: []Player{NewGame.Players[2], NewGame.Players[3]}, 
-		TeamName: fmt.Sprintf("Team %s&%s", NewGame.Players[2].Name, NewGame.Players[3].Name), TeamPoints: 0}
-
-
-		NewGame.Players[0].MyTeam, NewGame.Players[1].MyTeam = &Team1,&Team1
-		NewGame.Players[2].MyTeam, NewGame.Players[3].MyTeam = &Team2,&Team2
-		NewGame.Teams = []Team{Team1, Team2}
-	} else {
-
-		Team1 := Team{TeamPlayers: []Player{NewGame.Players[0]}, 
-		TeamName: fmt.Sprintf("Team %s", NewGame.Players[0].Name), TeamPoints: 0}
-
-		Team2 := Team{TeamPlayers: []Player{NewGame.Players[1]}, 
-		TeamName: fmt.Sprintf("Team %s", NewGame.Players[1].Name), TeamPoints: 0}
-
-
-		NewGame.Players[0].MyTeam = &Team1
-		NewGame.Players[1].MyTeam = &Team2
-		NewGame.Teams = []Team{Team1, Team2}
-	}
-
-	return &NewGame
-
-}
 
 func (G  *Game) MatchINIT(RoundNameOrder []string){
 	G.ClearGameVariables()
@@ -465,7 +465,7 @@ func (G  *Game) MatchINIT(RoundNameOrder []string){
 	}
 }
 
-func (G * Game) PlayRound(RoundPlayingOrder []Player) []Player{
+func (G * Game) PlayRound(RoundPlayingOrder []*Player) []*Player{
 
 	for _, CurPlayer := range(RoundPlayingOrder){
 		CurPlayer.IsTurn = true
@@ -557,18 +557,17 @@ func (G *Game) DealCards(Cards []cardpack.Card){
 
 }
 
-func (G * Game) PlayingOrder(PlayerCount int) ([]Player, []string){
+func (G * Game) PlayingOrder(PlayerCount int) ([]*Player, []string){
 
-	var RoundPlayingOrder []Player
+	var RoundPlayingOrder []*Player
 	var RoundNameOrder []string
 
-	fmt.Println(PlayerCount)
 	switch PlayerCount{
 		case 2:
-			RoundPlayingOrder = []Player{G.Teams[0].TeamPlayers[0], G.Teams[1].TeamPlayers[0]}
+			RoundPlayingOrder = []*Player{&G.Teams[0].TeamPlayers[0], &G.Teams[1].TeamPlayers[0]}
 			RoundNameOrder = []string{G.Teams[0].TeamPlayers[0].Name, G.Teams[1].TeamPlayers[0].Name}
 		case 4:
-			RoundPlayingOrder = []Player{G.Teams[0].TeamPlayers[0], G.Teams[1].TeamPlayers[0], G.Teams[0].TeamPlayers[1], G.Teams[1].TeamPlayers[1]}
+			RoundPlayingOrder = []*Player{&G.Teams[0].TeamPlayers[0], &G.Teams[1].TeamPlayers[0], &G.Teams[0].TeamPlayers[1], &G.Teams[1].TeamPlayers[1]}
 			RoundNameOrder = []string{G.Teams[0].TeamPlayers[0].Name, G.Teams[1].TeamPlayers[0].Name, G.Teams[0].TeamPlayers[1].Name, G.Teams[1].TeamPlayers[1].Name}
 		}
 
