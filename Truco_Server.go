@@ -49,7 +49,7 @@ type Player struct{
 }
 
 type Game struct{
-	Teams []Team
+	Teams []*Team
 	Players []*Player
 	CardsOnTable []cardpack.Card
 	Round int
@@ -150,7 +150,7 @@ func GameInit(ServerClients []Client) *Game{
 
 		NewGame.Players[0].MyTeam, NewGame.Players[1].MyTeam = &Team1,&Team1
 		NewGame.Players[2].MyTeam, NewGame.Players[3].MyTeam = &Team2,&Team2
-		NewGame.Teams = []Team{Team1, Team2}
+		NewGame.Teams = []*Team{&Team1, &Team2}
 	} else {
 
 		Team1 := Team{TeamPlayers: []*Player{NewGame.Players[0]}, 
@@ -162,7 +162,7 @@ func GameInit(ServerClients []Client) *Game{
 
 		NewGame.Players[0].MyTeam = &Team1
 		NewGame.Players[1].MyTeam = &Team2
-		NewGame.Teams = []Team{Team1, Team2}
+		NewGame.Teams = []*Team{&Team1, &Team2}
 	}
 
 	return &NewGame
@@ -338,10 +338,10 @@ func (G *Game) Challenge(Challenge string, Challenger *Player) Team{
 
 	G.BroadCast(fmt.Sprintf("%s PEDIU %s NEWBA", Challenger.Name, Challenge))
 	var OpponentTeam Team
-	if Challenger.MyTeam == &G.Teams[0]{
-		OpponentTeam = G.Teams[1]
+	if Challenger.MyTeam == G.Teams[0]{
+		OpponentTeam = *G.Teams[1]
 	}else{ 							  
-		OpponentTeam = G.Teams[0]
+		OpponentTeam = *G.Teams[0]
 	}
 				
 	OpponentTeam.Challenged = true
