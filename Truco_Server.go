@@ -386,6 +386,7 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 
 					OpponentTeam.Challenged = false
 					OpponentTeam.Accepted = ""
+					MyPlayer.IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 
 				case "queimar":
 					CardIndex := G.Jogar(MyPlayer)
@@ -404,6 +405,7 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 					Opponent := G.Flor(MyPlayer)
 					Opponent.Accepted = ""
 					Opponent.Challenged = false
+					MyPlayer.IpAddress.Write([]byte("\n" + "It's Your Turn!"))
 			}
 		}
 	}
@@ -627,7 +629,6 @@ func (G *Game) ClearGameVariables(){
 }
 
 func (G *Game) ClearRound(){
-	G.PointsOnWin = 1
 	G.Round += 1
 	G.CardsOnTable = []cardpack.Card{}
 	
