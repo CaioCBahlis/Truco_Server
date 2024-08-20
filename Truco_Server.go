@@ -184,6 +184,7 @@ func (G *Game) Start_Game(){
 
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
 			G.ClearRound()
+			G.NextGui()
 			RoundPlayingOrder = G.PlayRound(InternalOrder)
 			if G.Teams[0].Resigned || G.Teams[1].Resigned{
 				break
@@ -248,7 +249,7 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 	for{
 		n, _ := MyPlayer.IpAddress.Read(mybuff)
 		Message := string(mybuff[:n])
-		FormattedMessage := strings.ToLower(Message)
+		FormattedMessage := strings.TrimSpace(strings.ToLower(Message))
 
 		if !MyPlayer.IsTurn{
 			if n > 0 {
@@ -342,7 +343,7 @@ func (G *Game) Jogar(MyClient *Player) int{
 	MyClient.IpAddress.Write([]byte("\n" +"Enter the index of your card (1-3)"))
 
 	sz, _ := MyClient.IpAddress.Read(CardBuff)
-	Num, _ := strconv.Atoi(string(CardBuff[:sz]))
+	Num, _ := strconv.Atoi(strings.TrimSpace(string(CardBuff[:sz])))
 	CardIndex := Num-1
 
 	for CardIndex > len(MyClient.CurHand) || CardIndex < 0{
@@ -546,15 +547,20 @@ func (G *Game) DealCards(Cards []cardpack.Card){
 	for _, Player := range(G.Players){
 		Player.CurHand = append(Player.CurHand, Cards[0], Cards[1], Cards[2])
 		Cards = Cards[3:]
-		PlayerGUI := cardpack.UpdateGui(G.Round, Player.CurHand)
+	}
 
+}
+
+func (G *Game) NextGui(){
+
+	for _, Player := range(G.Players){
+		PlayerGUI := cardpack.UpdateGui(G.Round, Player.CurHand)
 
 		Player.IpAddress.Write([]byte("\n"))
 		for line := range(18){
 			Player.IpAddress.Write([]byte(PlayerGUI[line] + "\n"))
 		}
 	}
-
 }
 
 func (G * Game) PlayingOrder(PlayerCount int) ([]*Player, []string){
