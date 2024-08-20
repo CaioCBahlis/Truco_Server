@@ -183,8 +183,8 @@ func (G *Game) Start_Game(){
 		G.DealCards(Cards)
 
 		for G.Round <= NROUNDS && G.Teams[0].RoundsWon < MAXWONROUND && G.Teams[1].RoundsWon < MAXWONROUND{
-			G.ClearRound()
 			G.NextGui()
+			G.ClearRound()
 			RoundPlayingOrder = G.PlayRound(InternalOrder)
 			if G.Teams[0].Resigned || G.Teams[1].Resigned{
 				break
@@ -251,7 +251,23 @@ func (G *Game) ListenToMe(MyPlayer *Player){
 		Message := string(mybuff[:n])
 		FormattedMessage := strings.TrimSpace(strings.ToLower(Message))
 
-		if !MyPlayer.IsTurn{
+		if MyPlayer.MyTeam.Challenged{
+			var Response string
+			ResponseBuff := make([]byte, 1024)
+
+			sz, _ := MyPlayer.IpAddress.Read(ResponseBuff)
+			Response =  strings.TrimSpace(strings.ToLower(string(ResponseBuff[:sz])))
+
+			for Response != "y" && Response != "n"{
+				MyPlayer.IpAddress.Write([]byte("Invalid Response"))
+				sz, _ := MyPlayer.IpAddress.Read(ResponseBuff)
+				Response =  strings.TrimSpace(strings.ToLower(string(ResponseBuff[:sz])))
+			}
+
+			MyPlayer.MyTeam.Accepted = Response
+			
+
+		}else if !MyPlayer.IsTurn{
 			if n > 0 {
 				G.BroadCast(MyPlayer.Name + ": " + Message)
 			}
@@ -322,8 +338,11 @@ func (G *Game) Challenge(Challenge string, Challenger *Player) Team{
 
 	G.BroadCast(fmt.Sprintf("%s PEDIU %s NEWBA", Challenger.Name, Challenge))
 	var OpponentTeam Team
-	if Challenger.MyTeam == &G.Teams[0]{OpponentTeam = G.Teams[1]
-	}else{ 							  OpponentTeam = G.Teams[0]}
+	if Challenger.MyTeam == &G.Teams[0]{
+		OpponentTeam = G.Teams[1]
+	}else{ 							  
+		OpponentTeam = G.Teams[0]
+	}
 				
 	OpponentTeam.Challenged = true
 	for _, Player := range(OpponentTeam.TeamPlayers){
@@ -334,8 +353,8 @@ func (G *Game) Challenge(Challenge string, Challenger *Player) Team{
 	for OpponentTeam.Accepted != "y" && OpponentTeam.Accepted != "n"{
 		time.Sleep(1 * time.Second)
 	}
-	return OpponentTeam
 
+	return OpponentTeam
 }
 
 func (G *Game) Jogar(MyClient *Player) int{
